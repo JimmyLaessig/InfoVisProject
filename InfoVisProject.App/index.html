@@ -1,120 +1,193 @@
 ﻿<!DOCTYPE html>
-<meta charset="utf-8">
-<title>Google Maps + D3 Overlay</title>
-<!--<link rel="shortcut icon" href=""></link>-->
-<style>
-    html, body {
-        margin: 0;
-        padding: 0;
-       
-    }
-</style>
-<script src="https://d3js.org/d3.v4.min.js"></script>
-<body>
-    <div id="map" style="width: 960px; height: 500px;"></div>
-    <script>
-        function initMap () {
-            var el = document.querySelector('#map');
-            var google = window.google;
+<html>
+<head>
+    <title>Google maps GpsSensor layer with D3 for live position update</title>
 
-            // http://www.colourlovers.com/palette/937624/Dance_To_Forget
-            var colors = ['#FF4E50', '#FC913A', '#F9D423', '#EDE574', '#E1F5C4', '#FF4E50', '#FC913A', '#F9D423'];
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCdKoISSvWapqmNvTYZI0bWAavX_B7bXeQ"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/d3/3.3.3/d3.min.js"></script>
+    <script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script>
 
-            function SVGOverlay(map) {
-                this.map = map;
-                this.svg = null;
-                this.coords = [];
+    <script src="./sample_data.js" charset="utf-8"></script>
+    <script src="./data/mapStyles.js" charset="utf-8"></script>
+    <script src="./data/stations.js" charset="utf-8"></script>
 
-                this.onPan = this.onPan.bind(this);
+    <style type="text/css">
+        html,
+        body,
+        #map {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            color: blue;
+        }
 
-                this.setMap(map);
+        .stations,
+        .stations svg {
+            position: absolute;
+        }
+
+            .stations svg {
+                width: 60px;
+                height: 35px;
+                padding-right: 100px;
+                font: 12px sans-serif;
+            }
+            /*Use Oklahoma Watch blue.*/
+
+            .stations circle {
+                fill: #3587D4;
+                stroke: black;
+                stroke-width: 1px;
             }
 
-            SVGOverlay.prototype = new google.maps.OverlayView();
-
-            SVGOverlay.prototype.onAdd = function () {
-                this.svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-                this.svg.style.position = 'absolute';
-                this.svg.style.top = 0;
-                this.svg.style.left = 0;
-                this.svg.style.width = '960px';
-                this.svg.style.height = '500px';
-                this.svg.style.pointerEvents = 'none';
-
-                var bounds = this.map.getBounds(),
-                    center = bounds.getCenter(),
-                    ne = bounds.getNorthEast(),
-                    sw = bounds.getSouthWest();
-                for (var i = 0; i < 40; i++) {
-                    this.coords.push({
-                        id: i,
-                        color: colors[i % colors.length],
-                        latLng: new google.maps.LatLng(
-                            center.lat() + (Math.random() - 0.5) * Math.abs(ne.lat() - sw.lat()),
-                            center.lng() + (Math.random() - 0.5) * Math.abs(ne.lng() - sw.lng())
-                        )
-                    });
-                }
-
-                var proj = this.getProjection();
-
-                d3.select(this.svg)
-                    .attr('width', 960)
-                    .attr('height', 500)
-                    .append('g')
-                    .attr('class', 'coords')
-                    .selectAll('circle')
-                    .data(this.coords, (d) => d.id)
-                    .enter().append('circle')
-                    .attr('cx', (d) => proj.fromLatLngToContainerPixel(d.latLng).x)
-                    .attr('cy', (d) => proj.fromLatLngToContainerPixel(d.latLng).y)
-                    .attr('r', 5)
-                    .attr('fill', (d) => d.color);
-
-                this.onPan();
-                document.body.appendChild(this.svg);
-                this.map.addListener('center_changed', this.onPan);
-            };
-
-            SVGOverlay.prototype.onPan = function () {
-                var proj = this.getProjection();
-                d3.select(this.svg)
-                    .select('.coords')
-                    .selectAll('circle')
-                    .data(this.coords)
-                    .attr('cx', (d) => proj.fromLatLngToContainerPixel(d.latLng).x)
-                    .attr('cy', (d) => proj.fromLatLngToContainerPixel(d.latLng).y);
-            };
-
-            SVGOverlay.prototype.onRemove = function () {
-                this.map.removeListener('center_changed', this.onPan);
-                this.svg.parentNode.removeChild(this.svg);
-                this.svg = null;
-            };
-
-            SVGOverlay.prototype.draw = function () {
-                console.log('draw');
-            };
-
-
-            var map = new google.maps.Map(el, {
-                center: new google.maps.LatLng(37.81713964, -122.19346096),
-                zoom: 10,
-                disableDefaultUI: true,
-                draggableCursor : 'default'
-            });
-
-
-            d3.json('json/map-styles.json', function (style) {
-
-                map.mapTypes.set('custom', new google.maps.StyledMapType(style));
-                map.setMapTypeId('custom');
-            });
-                
-
-            var overlay = new SVGOverlay(map);
+        .d3-tip {
+            line-height: 1;
+            font-weight: bold;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            border-radius: 2px;
         }
+
+            /* Creates a small triangle extender for the tooltip */
+            .d3-tip:after {
+                box-sizing: border-box;
+                display: inline;
+                font-size: 10px;
+                width: 100%;
+                line-height: 1;
+                color: rgba(0, 0, 0, 0.8);
+                content: "\25BC";
+                position: absolute;
+                text-align: center;
+            }
+
+            /* Style northward tooltips differently */
+            .d3-tip.n:after {
+                margin: -1px 0 0 0;
+                top: 100%;
+                left: 0;
+            }
+
+            .tooltip {
+                position: absolute;
+                line-height: .7;
+                font-weight: bold;
+                padding: 8px;
+                background: rgba(0, 0, 0, 0.8);
+                color: #fff;
+                font-weight: bold;
+                font: 11.5px sans-serif;
+                border-radius: 2px;
+                pointer-events: none;
+            }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <script type="text/javascript">
+
+
+        var stationCount = stations.length;
+
+        var lat = 0;
+        var long = 0;
+
+        stations.m
+
+        for (var i = 0; i < stations.length; i++) {
+            var station = stations[i];
+            lat += parseFloat(station["Lat"]);
+            long += parseFloat(station["Long"]);
+        }
+
+        lat /= stations.length;
+        long /= stations.length;
+
+
+
+        var map = new google.maps.Map(d3.select("#map").node(), {
+            zoom: 12,
+
+            center: new google.maps.LatLng(lat, long),
+
+            disableDefaultUI: true,
+            draggableCursor: 'default'
+        });
+        map.mapTypes.set('custom', new google.maps.StyledMapType(styleGrey));
+        map.setMapTypeId('custom');
+
+
+        var overlay = new google.maps.OverlayView();
+
+        // Add the container when the overlay is added to the map.
+        overlay.onAdd = function () {
+            var layer = d3.select(this.getPanes().overlayMouseTarget).append("div")
+                .attr("class", "stations");
+
+            overlay.draw = function () {
+                var projection = this.getProjection();
+                var padding = 20;
+
+                var tooltip = d3.select("body")
+                    .append("div")
+                    .attr("class", "tooltip")
+                    .style("opacity", 0);
+                    
+                var marker = layer.selectAll("svg")
+                    .data(d3.entries(stations))
+                    .each(transform) // update existing markers
+                    .enter().append("svg:svg")
+                    .each(transform)
+                    .attr("class", "marker")
+                    .on("mouseover", function (d) {
+
+                        tooltip.transition()
+                            .duration(200)
+                            .style("opacity", .9);
+                        tooltip.html(d.value["Name"])
+                            .style("left", (d3.event.pageX + 5) + "px")
+                            .style("top", (d3.event.pageY - 28) + "px");
+                    })
+                    .on("mouseout", function (d) {
+                        tooltip.transition()
+                            .duration(200)
+                            .style("opacity", 0);
+                    });
+
+                // Add a circle.
+                marker.append("svg:circle")
+                    .attr("r", 11)
+                    .attr("cx", padding)
+                    .attr("cy", padding);
+
+                // Add a label.
+                marker.append("svg:text")
+                    .attr("x", padding)
+                    .attr("y", padding)
+                    .attr("dy", ".31em")
+                    //Center label in the circle.
+                    .attr("text-anchor", "left")
+                    .text(function (d) {
+                        return d.value["Name"];
+                    });
+
+                function transform(d) {
+                    var lat = parseFloat(d.value["Lat"]);
+                    var long = parseFloat(d.value["Long"]);
+                    d = new google.maps.LatLng(lat, long);
+                    d = projection.fromLatLngToDivPixel(d);
+                    return d3.select(this)
+                        .style("left", (d.x - padding) + "px")
+                        .style("top", (d.y - padding) + "px");
+                }
+            };
+        };
+
+        // Bind our overlay to the map…
+        overlay.setMap(map);
     </script>
-    <script type ="text/javascript" src = "js/d3.v4.min.js"></script>
-    <script src ="https://maps.googleapis.com/maps/api/js?v=3&amp;libraries=places&amp;key=AIzaSyCdKoISSvWapqmNvTYZI0bWAavX_B7bXeQ&amp;callback=initMap"></script>
 </body>
+</html>
