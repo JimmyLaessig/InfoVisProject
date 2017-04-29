@@ -1,16 +1,18 @@
 ﻿<!DOCTYPE html>
 <html>
-<head>
+<head>    
     <title>Google maps GpsSensor layer with D3 for live position update</title>
 
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCdKoISSvWapqmNvTYZI0bWAavX_B7bXeQ"></script>
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
     <script src="http://cdnjs.cloudflare.com/ajax/libs/d3/3.3.3/d3.min.js"></script>
     <script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script>
+    <script src="https://d3js.org/d3.v4.js"></script>
 
     <script src="./sample_data.js" charset="utf-8"></script>
     <script src="./data/mapStyles.js" charset="utf-8"></script>
     <script src="./data/stations.js" charset="utf-8"></script>
+
 
     <style type="text/css">
         html,
@@ -26,50 +28,11 @@
         .stations,
         .stations svg {
             position: absolute;
+            width: 120px;
+            height : 120px;
         }
+ 
 
-            .stations svg {
-                width: 60px;
-                height: 35px;
-                padding-right: 100px;
-                font: 12px sans-serif;
-            }
-            /*Use Oklahoma Watch blue.*/
-
-            .stations circle {
-                fill: #3587D4;
-                stroke: black;
-                stroke-width: 1px;
-            }
-
-        .d3-tip {
-            line-height: 1;
-            font-weight: bold;
-            padding: 12px;
-            background: rgba(0, 0, 0, 0.8);
-            color: #fff;
-            border-radius: 2px;
-        }
-
-            /* Creates a small triangle extender for the tooltip */
-            .d3-tip:after {
-                box-sizing: border-box;
-                display: inline;
-                font-size: 10px;
-                width: 100%;
-                line-height: 1;
-                color: rgba(0, 0, 0, 0.8);
-                content: "\25BC";
-                position: absolute;
-                text-align: center;
-            }
-
-            /* Style northward tooltips differently */
-            .d3-tip.n:after {
-                margin: -1px 0 0 0;
-                top: 100%;
-                left: 0;
-            }
 
             .tooltip {
                 position: absolute;
@@ -86,16 +49,17 @@
     </style>
 </head>
 <body>
+
     <div id="map"></div>
+
     <script type="text/javascript">
 
-
         var stationCount = stations.length;
-
+        
         var lat = 0;
         var long = 0;
 
-        stations.m
+        
 
         for (var i = 0; i < stations.length; i++) {
             var station = stations[i];
@@ -106,8 +70,6 @@
         lat /= stations.length;
         long /= stations.length;
 
-
-
         var map = new google.maps.Map(d3.select("#map").node(), {
             zoom: 12,
 
@@ -116,32 +78,34 @@
             disableDefaultUI: true,
             draggableCursor: 'default'
         });
+
         map.mapTypes.set('custom', new google.maps.StyledMapType(styleGrey));
         map.setMapTypeId('custom');
 
+        var tooltip = d3.select("body")
+            .append("div")
+            .attr("class", "tooltip")
+            .style("opacity", 0);
 
         var overlay = new google.maps.OverlayView();
+        
 
-        // Add the container when the overlay is added to the map.
-        overlay.onAdd = function () {
-            var layer = d3.select(this.getPanes().overlayMouseTarget).append("div")
+        overlay.draw = function ()
+        {
+            d3.select(overlay.getPanes().overlayMouseTarget).selectAll("*").remove();
+            var layer = d3.select(overlay.getPanes().overlayMouseTarget).append("div")
                 .attr("class", "stations");
+            
+            var projection  = overlay.getProjection();
+            var padding     = 40;
 
-            overlay.draw = function () {
-                var projection = this.getProjection();
-                var padding = 20;
-
-                var tooltip = d3.select("body")
-                    .append("div")
-                    .attr("class", "tooltip")
-                    .style("opacity", 0);
-                    
-                var marker = layer.selectAll("svg")
-                    .data(d3.entries(stations))
-                    .each(transform) // update existing markers
-                    .enter().append("svg:svg")
-                    .each(transform)
-                    .attr("class", "marker")
+            
+            var marker      = layer.selectAll("svg")
+                .data(d3.entries(stations))
+                .enter()
+                .append("svg:svg")
+                .each(transform)
+                .attr("class", "marker")
                     .on("mouseover", function (d) {
 
                         tooltip.transition()
@@ -155,35 +119,29 @@
                         tooltip.transition()
                             .duration(200)
                             .style("opacity", 0);
-                    });
+                });
 
-                // Add a circle.
-                marker.append("svg:circle")
-                    .attr("r", 11)
-                    .attr("cx", padding)
-                    .attr("cy", padding);
 
-                // Add a label.
-                marker.append("svg:text")
-                    .attr("x", padding)
-                    .attr("y", padding)
-                    .attr("dy", ".31em")
-                    //Center label in the circle.
-                    .attr("text-anchor", "left")
-                    .text(function (d) {
-                        return d.value["Name"];
-                    });
+            marker.append("svg:path")
+                .attr("d", "M75.671,48.659l-50-25c-0.543-0.272-1.192-0.19-1.65,0.206c-0.458,0.395-0.634,1.026-0.446,1.602l7.851,24.043  l-7.856,25.042c-0.18,0.574,0.001,1.201,0.459,1.591c0.277,0.236,0.623,0.358,0.973,0.358c0.229,0,0.458-0.052,0.671-0.158l50-25  c0.508-0.254,0.829-0.773,0.829-1.342S76.179,48.913,75.671,48.659z")
+                .attr("clip-rule", "evenodd")
+                .attr("fill", "#0D0D0D")
+                .attr("fill-rule", "evenodd")
+                .attr("transform", "scale(0.5) rotate(90 50 50)");
+               
+            // Add a label.
+            
 
-                function transform(d) {
-                    var lat = parseFloat(d.value["Lat"]);
-                    var long = parseFloat(d.value["Long"]);
-                    d = new google.maps.LatLng(lat, long);
-                    d = projection.fromLatLngToDivPixel(d);
-                    return d3.select(this)
-                        .style("left", (d.x - padding) + "px")
-                        .style("top", (d.y - padding) + "px");
-                }
-            };
+            function transform(d) {
+                //console.log("transform");
+                var lat = parseFloat(d.value["Lat"]);
+                var long = parseFloat(d.value["Long"]);
+                d = new google.maps.LatLng(lat, long);
+                d = projection.fromLatLngToDivPixel(d);
+                return d3.select(this)
+                    .style("left", (d.x - padding) + "px")
+                    .style("top", (d.y - padding) + "px");
+            }
         };
 
         // Bind our overlay to the map…
