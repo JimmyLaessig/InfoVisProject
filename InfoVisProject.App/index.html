@@ -8,8 +8,8 @@
     <script src="http://cdnjs.cloudflare.com/ajax/libs/d3/3.3.3/d3.min.js"></script>
     <script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script>
     <script src="https://d3js.org/d3.v4.js"></script>
-
-    <script src="./sample_data.js" charset="utf-8"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mousetrap/1.4.6/mousetrap.js" charset="utf-8"></script>
+    
     <script src="./data/mapStyles.js" charset="utf-8"></script>
     <script src="./data/stations.js" charset="utf-8"></script>
 
@@ -27,9 +27,11 @@
 
         .stations,
         .stations svg {
+            margin: auto;
             position: absolute;
-            width: 120px;
-            height : 120px;
+            width: 100px;
+            height: 100px;
+            background: rgba(0, 0, 0, 0.8);
         }
  
 
@@ -88,16 +90,21 @@
             .style("opacity", 0);
 
         var overlay = new google.maps.OverlayView();
-        
+       
+        var rotation = 0.0;
+
+        Mousetrap.bind('+', function (e, n) { rotation = rotation + 10; console.log(rotation); overlay.draw(); });
+        Mousetrap.bind('-', function (e, n) { rotation = rotation - 10; console.log(rotation); overlay.draw(); });
 
         overlay.draw = function ()
         {
             d3.select(overlay.getPanes().overlayMouseTarget).selectAll("*").remove();
             var layer = d3.select(overlay.getPanes().overlayMouseTarget).append("div")
                 .attr("class", "stations");
-            
+
+
             var projection  = overlay.getProjection();
-            var padding     = 40;
+            var padding     = 20;
 
             
             var marker      = layer.selectAll("svg")
@@ -119,16 +126,27 @@
                         tooltip.transition()
                             .duration(200)
                             .style("opacity", 0);
-                });
-
+                });       
 
             marker.append("svg:path")
                 .attr("d", "M75.671,48.659l-50-25c-0.543-0.272-1.192-0.19-1.65,0.206c-0.458,0.395-0.634,1.026-0.446,1.602l7.851,24.043  l-7.856,25.042c-0.18,0.574,0.001,1.201,0.459,1.591c0.277,0.236,0.623,0.358,0.973,0.358c0.229,0,0.458-0.052,0.671-0.158l50-25  c0.508-0.254,0.829-0.773,0.829-1.342S76.179,48.913,75.671,48.659z")
                 .attr("clip-rule", "evenodd")
                 .attr("fill", "#0D0D0D")
                 .attr("fill-rule", "evenodd")
-                .attr("transform", "scale(0.5) rotate(90 50 50)");
-               
+                .attr("transform", "rotate("+ rotation.toString() + " 50 50)");
+
+            marker.append("svg:path")
+                .attr("d", "M75.671,48.659l-50-25c-0.543-0.272-1.192-0.19-1.65,0.206c-0.458,0.395-0.634,1.026-0.446,1.602l7.851,24.043  l-7.856,25.042c-0.18,0.574,0.001,1.201,0.459,1.591c0.277,0.236,0.623,0.358,0.973,0.358c0.229,0,0.458-0.052,0.671-0.158l50-25  c0.508-0.254,0.829-0.773,0.829-1.342S76.179,48.913,75.671,48.659z")
+                .attr("clip-rule", "evenodd")
+                .attr("fill", "#FF0D0D")
+                .attr("fill-rule", "evenodd")
+                .attr("transform", "scale(0.7) translate(21 21) rotate(" + rotation.toString() + " 50 50)");
+
+                //.attr("transform", "translate(0, 0)");
+            //marker.append("svg:circle")
+            //    .attr("r", 11)
+            //    .attr("cx", 50)
+            //    .attr("cy", 50);
             // Add a label.
             
 
@@ -139,8 +157,8 @@
                 d = new google.maps.LatLng(lat, long);
                 d = projection.fromLatLngToDivPixel(d);
                 return d3.select(this)
-                    .style("left", (d.x - padding) + "px")
-                    .style("top", (d.y - padding) + "px");
+                    .style("left", (d.x) + "px")
+                    .style("top", (d.y) + "px");
             }
         };
 
