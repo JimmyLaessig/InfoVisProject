@@ -12,8 +12,9 @@
     
     <script src="./data/mapStyles.js" charset="utf-8"></script>
     <script src="./data/stations.js" charset="utf-8"></script>
-
-
+    <script src="./Marker.js" charset="utf-8"></script>
+    <style type="text/css" src = "./style.css" charset ="utf-8"></style>
+    <!--<style type="text/css" src ="./style.css" charset="utf-8"></style>-->
     <style type="text/css">
         html,
         body,
@@ -25,29 +26,27 @@
             color: blue;
         }
 
-        .stations,
-        .stations svg {
-            margin: auto;
+        
+        svg {
+            margin: 0;
             position: absolute;
-            width: 100px;
-            height: 100px;
-            background: rgba(0, 0, 0, 0.8);
+            width: 40px;
+            height: 40px;
+            background: rgba(0, 0, 0, 0.0);
         }
- 
 
-
-            .tooltip {
-                position: absolute;
-                line-height: .7;
-                font-weight: bold;
-                padding: 8px;
-                background: rgba(0, 0, 0, 0.8);
-                color: #fff;
-                font-weight: bold;
-                font: 11.5px sans-serif;
-                border-radius: 2px;
-                pointer-events: none;
-            }
+        .tooltip {
+            position: absolute;
+            line-height: .7;
+            font-weight: bold;
+            padding: 8px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            font-weight: bold;
+            font: 11.5px sans-serif;
+            border-radius: 2px;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
@@ -69,6 +68,19 @@
             long += parseFloat(station["Long"]);
         }
 
+        let markers = stations.map(station => {
+            var id = station["Id"];
+            var lat = parseFloat(station["Lat"]);
+            var long = parseFloat(station["Long"]);
+            var name = station["Name"];
+            var year1 = 1990;
+            var year2 = 2017;
+            var value1 = 22.5;
+            var value2 = 22.6;
+
+            return new Marker(id, name, lat, long, year1, value1, year2, value2);
+        });
+
         lat /= stations.length;
         long /= stations.length;
 
@@ -89,36 +101,34 @@
             .attr("class", "tooltip")
             .style("opacity", 0);
 
-        var overlay = new google.maps.OverlayView();
-       
-        var rotation = 0.0;
-
-        Mousetrap.bind('+', function (e, n) { rotation = rotation + 10; console.log(rotation); overlay.draw(); });
-        Mousetrap.bind('-', function (e, n) { rotation = rotation - 10; console.log(rotation); overlay.draw(); });
+        var overlay = new google.maps.OverlayView();      
+        
 
         overlay.draw = function ()
         {
+
             d3.select(overlay.getPanes().overlayMouseTarget).selectAll("*").remove();
             var layer = d3.select(overlay.getPanes().overlayMouseTarget).append("div")
                 .attr("class", "stations");
 
 
             var projection  = overlay.getProjection();
-            var padding     = 20;
+            var padding     = 25;
 
             
             var marker      = layer.selectAll("svg")
-                .data(d3.entries(stations))
+                .data(d3.entries(markers))
                 .enter()
                 .append("svg:svg")
                 .each(transform)
                 .attr("class", "marker")
+                    .on("mouse")
                     .on("mouseover", function (d) {
-
+                        
                         tooltip.transition()
                             .duration(200)
                             .style("opacity", .9);
-                        tooltip.html(d.value["Name"])
+                        tooltip.html(d.value.getTooltip)
                             .style("left", (d3.event.pageX + 5) + "px")
                             .style("top", (d3.event.pageY - 28) + "px");
                     })
@@ -128,39 +138,36 @@
                             .style("opacity", 0);
                 });       
 
+
             marker.append("svg:path")
                 .attr("d", "M75.671,48.659l-50-25c-0.543-0.272-1.192-0.19-1.65,0.206c-0.458,0.395-0.634,1.026-0.446,1.602l7.851,24.043  l-7.856,25.042c-0.18,0.574,0.001,1.201,0.459,1.591c0.277,0.236,0.623,0.358,0.973,0.358c0.229,0,0.458-0.052,0.671-0.158l50-25  c0.508-0.254,0.829-0.773,0.829-1.342S76.179,48.913,75.671,48.659z")
                 .attr("clip-rule", "evenodd")
                 .attr("fill", "#0D0D0D")
                 .attr("fill-rule", "evenodd")
-                .attr("transform", "rotate("+ rotation.toString() + " 50 50)");
+                .attr("transform", (d) => "scale(0.6) translate (-15 -16) rotate(" + d.value.getRotation.toString() + " 50 50)");
+
 
             marker.append("svg:path")
                 .attr("d", "M75.671,48.659l-50-25c-0.543-0.272-1.192-0.19-1.65,0.206c-0.458,0.395-0.634,1.026-0.446,1.602l7.851,24.043  l-7.856,25.042c-0.18,0.574,0.001,1.201,0.459,1.591c0.277,0.236,0.623,0.358,0.973,0.358c0.229,0,0.458-0.052,0.671-0.158l50-25  c0.508-0.254,0.829-0.773,0.829-1.342S76.179,48.913,75.671,48.659z")
                 .attr("clip-rule", "evenodd")
-                .attr("fill", "#FF0D0D")
+                .attr("fill", (d) => d.value.getColor)
                 .attr("fill-rule", "evenodd")
-                .attr("transform", "scale(0.7) translate(21 21) rotate(" + rotation.toString() + " 50 50)");
-
-                //.attr("transform", "translate(0, 0)");
-            //marker.append("svg:circle")
-            //    .attr("r", 11)
-            //    .attr("cx", 50)
-            //    .attr("cy", 50);
-            // Add a label.
+                .attr("transform", (d) => "scale(0.5) translate(-8 -10) rotate(" + d.value.getRotation.toString() + " 50 50)");
             
 
             function transform(d) {
-                //console.log("transform");
-                var lat = parseFloat(d.value["Lat"]);
-                var long = parseFloat(d.value["Long"]);
-                d = new google.maps.LatLng(lat, long);
+                d = new google.maps.LatLng(d.value.getLatitude, d.value.getLongitude);
                 d = projection.fromLatLngToDivPixel(d);
                 return d3.select(this)
-                    .style("left", (d.x) + "px")
-                    .style("top", (d.y) + "px");
+                    .style("left", (d.x)  - 25.0 + "px")
+                    .style("top", (d.y) - 25.0 + "px");
             }
         };
+
+       // Mousetrap.bind('+', function (e, n) { markers = markers.map((marker) => new Marker(marker.name, marker.lat, marker.long, marker.year1, marker.value1, marker.year2, marker.value2 + 1)); overlay.draw(); });
+
+        Mousetrap.bind('+', function (e, n) { markers = markers.map((marker) => new Marker(marker.id, marker.name, marker.lat, marker.long, marker.year1, marker.value1, marker.year2, marker.value2 + 0.1)); overlay.draw(); });
+        Mousetrap.bind('-', function (e, n) { markers = markers.map((marker) => new Marker(marker.id, marker.name, marker.lat, marker.long, marker.year1, marker.value1, marker.year2, marker.value2 - 0.1)); overlay.draw(); });
 
         // Bind our overlay to the map…
         overlay.setMap(map);
