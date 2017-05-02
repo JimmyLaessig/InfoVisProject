@@ -13,6 +13,7 @@
     <script src="./data/mapStyles.js" charset="utf-8"></script>
     <script src="./data/stations.js" charset="utf-8"></script>
     <script src="./Marker.js" charset="utf-8"></script>
+    <script src="./Manager.js" charset="utf-8"></script>
     <style type="text/css" src = "./style.css" charset ="utf-8"></style>
     <!--<style type="text/css" src ="./style.css" charset="utf-8"></style>-->
     <style type="text/css">
@@ -56,41 +57,40 @@
     <script type="text/javascript">
 
         var stationCount = stations.length;
-        
-        var lat = 0;
-        var long = 0;
 
+        var minLat  = Infinity;
+        var maxLat  =-Infinity;
+        var minLong = Infinity;
+        var maxLong =-Infinity;
         
+        for (var i = 0; i < stations.length; i++)
+        {
+            var lat = parseFloat(stations[i]["Lat"]);
+            var long = parseFloat(stations[i]["Long"]);
 
-        for (var i = 0; i < stations.length; i++) {
-            var station = stations[i];
-            lat += parseFloat(station["Lat"]);
-            long += parseFloat(station["Long"]);
+            minLat      = Math.min(lat, minLat);
+            maxLat      = Math.max(lat, maxLat);
+            minLong     = Math.min(long, minLong);
+            maxLong     = Math.max(long, maxLong);
         }
+        
+        var lat     = (maxLat + minLat) / 2.0;
+        var long    = (maxLong + minLong) / 2.0;
 
-        let markers = stations.map(station => {
-            var id = station["Id"];
-            var lat = parseFloat(station["Lat"]);
-            var long = parseFloat(station["Long"]);
-            var name = station["Name"];
-            var year1 = 1990;
-            var year2 = 2017;
-            var value1 = 22.5;
-            var value2 = 22.6;
+        var activeMarkers = markers;
 
-            return new Marker(id, name, lat, long, year1, value1, year2, value2);
-        });
-
-        lat /= stations.length;
-        long /= stations.length;
 
         var map = new google.maps.Map(d3.select("#map").node(), {
-            zoom: 12,
+            zoom: 10,
 
             center: new google.maps.LatLng(lat, long),
 
             disableDefaultUI: true,
             draggableCursor: 'default'
+        });
+        google.maps.event.addListener(map, 'zoom_changed', function ()
+        {            
+            activeMarkers = filterStations(map.getZoom());            
         });
 
         map.mapTypes.set('custom', new google.maps.StyledMapType(styleGrey));
@@ -106,7 +106,7 @@
 
         overlay.draw = function ()
         {
-
+            console.log("draw");
             d3.select(overlay.getPanes().overlayMouseTarget).selectAll("*").remove();
             var layer = d3.select(overlay.getPanes().overlayMouseTarget).append("div")
                 .attr("class", "stations");
@@ -117,12 +117,11 @@
 
             
             var marker      = layer.selectAll("svg")
-                .data(d3.entries(markers))
+                .data(d3.entries(activeMarkers))
                 .enter()
                 .append("svg:svg")
                 .each(transform)
                 .attr("class", "marker")
-                    .on("mouse")
                     .on("mouseover", function (d) {
                         
                         tooltip.transition()
@@ -164,8 +163,7 @@
             }
         };
 
-       // Mousetrap.bind('+', function (e, n) { markers = markers.map((marker) => new Marker(marker.name, marker.lat, marker.long, marker.year1, marker.value1, marker.year2, marker.value2 + 1)); overlay.draw(); });
-
+       
         Mousetrap.bind('+', function (e, n) { markers = markers.map((marker) => new Marker(marker.id, marker.name, marker.lat, marker.long, marker.year1, marker.value1, marker.year2, marker.value2 + 0.1)); overlay.draw(); });
         Mousetrap.bind('-', function (e, n) { markers = markers.map((marker) => new Marker(marker.id, marker.name, marker.lat, marker.long, marker.year1, marker.value1, marker.year2, marker.value2 - 0.1)); overlay.draw(); });
 
