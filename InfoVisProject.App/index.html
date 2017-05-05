@@ -96,6 +96,14 @@
         map.mapTypes.set('custom', new google.maps.StyledMapType(styleGrey));
         map.setMapTypeId('custom');
 
+        activeMarkers.forEach(m => { 
+            var marker = new google.maps.Marker({
+                position: new google.maps.LatLng(m.getLatitude, m.getLongitude),
+                map: map,
+                title: m.name
+            });
+        }); 
+
         var tooltip = d3.select("body")
             .append("div")
             .attr("class", "tooltip")

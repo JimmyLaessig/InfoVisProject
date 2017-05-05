@@ -11,6 +11,7 @@ module Data
             temperature         : Option<float>
         }
 
+
         static member ToCSV(sample : Sample) = 
             let c = 
                 match sample.discreteChlorophyll with
@@ -30,30 +31,8 @@ module Data
 
 
 
-    let GetSamplesPerYearPerStation (year : string) (station : string) (data : Sample[]) = 
-        data |> Array.filter(fun sample -> sample.year = year && sample.station = station)
-    
-
-    let GetTemperaturePerYearPerStation(year : string) (station : string) (data : Sample[]) = 
-        data |> GetSamplesPerYearPerStation year station 
-             |> Array.choose (fun sample -> sample.temperature)
-
-
-    let GetSalinityPerYearPerStation(year : string) (station : string) (data : Sample[]) = 
-        data |> GetSamplesPerYearPerStation year station 
-             |> Array.choose (fun sample -> sample.salinity)
-
-
-    let GetChlorophyllPerYearPerStation(year : string) (station : string) (data : Sample[]) = 
-        data |> GetSamplesPerYearPerStation year station 
-             |> Array.choose (fun sample -> sample.discreteChlorophyll)
-
-
-    let WriteToFile path (header : string[])(data : string[][]) = 
-        let header = header |>String.concat ";"
-        let content = data |> Array.map(fun line -> line  |> Array.map  (fun args -> args)
-                                                    |> String.concat ";")
-
-        
+    let WriteToFile path (header : string[])( samples : Sample[]) = 
+        let header  = header |> String.concat ";"
+        let content = samples |> Array.map(fun samples -> Sample.ToCSV samples)
         System.IO.File.WriteAllLines(path, [|header|]);
         System.IO.File.AppendAllLines(path, content);
