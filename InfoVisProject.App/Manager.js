@@ -1,20 +1,17 @@
-﻿document.write('<scr' + 'ipt type="text/javascript" src="./data/stations.js" ></scr' + 'ipt>');
+﻿document.write('<script type="text/javascript" src="./data/stations.js" ></script>');
+document.write('<script type="text/javascript" src="./Functions.js" ></script>');
 
-var split = function (arr, chunkSize) {
-    var groups = [], i;
-    for (i = 0; i < arr.length; i += chunkSize) {
-        groups.push(arr.slice(i, i + chunkSize));
-    }
-    return groups;
-}
+
+
 
 function State(year1, year2, value, zoom) {
-    this.year1  = year;
+    this.year1  = year1;
     this.year2  = year2;
     this.value  = value;
     this.zoom   = zoom;
 }
 
+var currentState = new State("1969", "2014", "salinity", 10);
 
 var markers = stations.map(station => {
     var id = station["Id"];
@@ -29,6 +26,10 @@ var markers = stations.map(station => {
     return new Marker(id, name, lat, long, year1, value1, year2, value2);
 });
 
+
+function calculateMarkers(state) {
+    return filterStations(state.zoom);
+}
 
 // min lod : 6
 // max lod : 11
@@ -46,11 +47,12 @@ function filterStations(zoom)
     else if (level == 4)    groupSize = 3;  
     else if (level == 5)    groupSize = 1; 
     else if (level == 6)    groupSize = 1;
-    
-    var groupedMarkers = split(markers, groupSize);  
-    var groupedMarkers2 = groupedMarkers.map(group => { return Marker.average(group); });
+   
+    var groupedMarkers = split(markers, groupSize);
+    var groupedMarkers2 = groupedMarkers.map(group => Marker.group(group));
     return groupedMarkers2;
 }
+
 
 function filterDataSet(state)
 {

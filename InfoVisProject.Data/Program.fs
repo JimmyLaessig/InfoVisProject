@@ -7,6 +7,7 @@ open Data
 let main argv = 
     let path        = "SFBay.csv"
     let path_out    = "C:\Users\Bernhard\Desktop\SFBay_averaged.csv"
+
     let lines       = File.ReadAllLines(path)|> Array.map (fun line -> line.Split(';') )
                                         
    
@@ -14,14 +15,17 @@ let main argv =
     let header  = [|header.[0]; header.[1]; header.[4]; header.[17]; header.[18]|]
     let data    = Array.tail lines
 
-    let timeStamp           = data |> Array.map(fun line -> line.[0].Substring(0, 4));
-    let stationNumber       = data |> Array.map(fun line -> line.[1]);
-    let discreteChlorophyll = data |> Array.map(fun line -> line.[4]);
-    let salinity            = data |> Array.map(fun line -> line.[17]);
-    let temperature         = data |> Array.map(fun line -> line.[18]);
+    let timeStamp           = data |> Array.map(fun line -> line.[0].Substring(0, 4))
+    let stationNumber       = data |> Array.map(fun line -> line.[1])
+    let discreteChlorophyll = data |> Array.map(fun line -> line.[4])   |> Array.map (fun sample -> sample.Replace('.',','))
+    let salinity            = data |> Array.map(fun line -> line.[17])  |> Array.map (fun sample -> sample.Replace('.',','))
+    let temperature         = data |> Array.map(fun line -> line.[18])  |> Array.map (fun sample -> sample.Replace('.',','))
     
     // Reduced Dimensions
     let data =  timeStamp |> Array.mapi (fun i t -> [|t ; stationNumber.[i];discreteChlorophyll.[i];salinity.[i];temperature.[i]|])
+
+
+    
 
 
     let nonStandardStations = [|"662";"659";"655";"654";"653";"652";"651";"650";"411";"407";"405";"12.5";"19";"28.5"; "5"; "6"; "7"|]
@@ -94,6 +98,9 @@ let main argv =
     let minYear = System.Int32.Parse(minYear)
     let maxYear = System.Int32.Parse(maxYear)
 
+    let x = samples |> Array.filter(fun sample -> sample.station = "12" && sample.year = "1988")
+    let y = samplesAveraged |> Array.filter(fun sample -> sample.station = "12" && sample.year = "1988")
+    let maxTemp = samplesAveraged |> Array.maxBy (fun sample -> sample.temperature)
 
     for year in minYear..maxYear do
         let year = sprintf "%i" year
@@ -102,7 +109,7 @@ let main argv =
                                           |> Array.map (fun sample -> sample.year)
         printfn "%s: stations: %i" year (numStations |> Array.length)
     
-    let years = samples |> 
+    
     // Build averaged samples
     Data.WriteToFile path_out header samplesAveraged  
     

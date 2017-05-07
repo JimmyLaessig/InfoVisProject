@@ -1,32 +1,93 @@
-﻿html,body,
-#map {
+﻿html,
+body {
     width: 100%;
-    height: 100%;
+    height: 99%;
+    margin: 0px;
+    padding: 0px;
+    display: flex;
+   
+}
+
+#left {
+    width: 60%;
+    align-items: stretch;
+    float : left;
     margin: 0;
     padding: 0;
-    color: blue;
 }
 
 
-svg {
+#map {
+    width: auto;
+    height: 100%;
+    margin: 5px;
+    padding: 0;
+    color: black;
+    border-radius: 5px;
+    border: groove
+}
+
+#right {
+    width: 40%;
+    align-items: stretch;
+    margin: 0;
+    padding: 0;
+    float: right;
+}
+
+#values {
+    width: auto;
+    height: 200px;
+    margin: 5px;
+    border-radius: 5px;
+    border: groove;
+    display: flex;
+}
+
+#description {
+    width: 70%;
+    margin: 5px;
+    height: auto;
+    float: right;
+}
+
+#selection {
+    width: 30%;
+    float: left;
+    margin: 5px;
+    overflow: hidden;
+}
+
+#year_slider {
+    margin : 10px;
+}
+
+#lineplot {
+    width: auto;
+    height: 40%;
+    margin: 5px;
+    border-radius: 5px;
+    border: groove;
+    background : red;
+}
+
+.marker {
     margin: 0;
     position: absolute;
+    background: rgba(0,0,0, 0.0);
     width: 40px;
     height: 40px;
-    background: rgba(0, 0, 0, 0.0);
 }
 
 .tooltip {
-    position: absolute;
-    line-height: .7;
-    font-weight: bold;
-    padding: 8px;
-    background: rgba(0, 0, 0, 0.8);
-    color: #fff;
-    font-weight: bold;
-    font: 11.5px sans-serif;
+    position    : absolute;
+    line-height : .7;
+    font-weight : bold;
+    padding     : 4px;
+    background  : rgba(0, 0, 0, 0.8);
+    color       : #fff;
+    font-weight : bold;
+    font        : 11.5px sans-serif;
     border-radius: 2px;
     pointer-events: none;
 }
-
-

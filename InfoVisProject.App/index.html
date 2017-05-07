@@ -10,128 +10,149 @@
     <script src="https://d3js.org/d3.v4.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mousetrap/1.4.6/mousetrap.js" charset="utf-8"></script>
     
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
     <script src="./data/mapStyles.js" charset="utf-8"></script>
     <script src="./data/stations.js" charset="utf-8"></script>
     <script src="./Marker.js" charset="utf-8"></script>
     <script src="./Manager.js" charset="utf-8"></script>
-    <style type="text/css" src = "./style.css" charset ="utf-8"></style>
-    <!--<style type="text/css" src ="./style.css" charset="utf-8"></style>-->
-    <style type="text/css">
-        html,
-        body,
-        #map {
-            width: 100%;
-            height: 100%;
-            margin: 0;
-            padding: 0;
-            color: blue;
-        }
-
-        
-        svg {
-            margin: 0;
-            position: absolute;
-            width: 40px;
-            height: 40px;
-            background: rgba(0, 0, 0, 0.0);
-        }
-
-        .tooltip {
-            position: absolute;
-            line-height: .7;
-            font-weight: bold;
-            padding: 8px;
-            background: rgba(0, 0, 0, 0.8);
-            color: #fff;
-            font-weight: bold;
-            font: 11.5px sans-serif;
-            border-radius: 2px;
-            pointer-events: none;
-        }
-    </style>
+    <link rel="stylesheet" href = "style.css">    
 </head>
+
 <body>
 
-    <div id="map"></div>
+    <div id="left">
+        <div id="map"></div>
+    </div>
+    <div id="right">
+        
+        <div id="values">
+           
+            <select id="selection" size="3">
+                <option value="temperature">Temperature</option>
+                <option value="salinity">Salinity</option>
+                <option value="chlorophyll">Discrete Chlorophyll</option>
+            </select>
+
+            <div id="description">
+                <div id="description_temperature">
+                    <a href="https://sfbay.wr.usgs.gov/access/wqdata/overview/measure/ctd/profiles/temp_prof.html">Temperature</a> measured in degrees Centigrade.
+                </div>
+                <div id="description_salinity">
+                    A measure of the salt content of water, which can be estimated accurately from measures of conductivity and temperature; salinity is measured in practical salinity units (psu), and the salinity of river water is often about 0.1 psu while the salinity of coastal Pacific Ocean water is about 33-34 psu; measures of salinity in the Bay tell the relative proportions of river water and ocean water at different locations.
+                </div>
+                <div id="description_chlorophyll">
+                    Discrete measurement of <a href="https://sfbay.wr.usgs.gov/access/wqdata/guide/glossary.html#Chlor">chlorophyll a</a> a concentration, in units of milligrams per cubic meter (equivalent to micrograms per liter). This discrete measurement is made by laboratory analysis of the chlorophyll content of a water sample collected onto a filter.
+                </div>
+            </div>
+        </div >
+
+
+
+        <p>
+            <label for="year1">Year 1:</label>
+            <input type="text" id="year1" readonly style="border:0; color:#f6931f; font-weight:bold;">
+            <label for="year2">Year 2:</label>
+            <input type="text" id="year2" readonly style="border:0; color:#f6931f; font-weight:bold;">
+        </p>
+
+        <div id="year_slider"></div>
+
+
+        <!--<div id="lineplot"></div>-->
+    </div >
+
 
     <script type="text/javascript">
 
-        var stationCount = stations.length;
-
-        var minLat  = Infinity;
-        var maxLat  =-Infinity;
-        var minLong = Infinity;
-        var maxLong =-Infinity;
-        
-        for (var i = 0; i < stations.length; i++)
-        {
-            var lat = parseFloat(stations[i]["Lat"]);
-            var long = parseFloat(stations[i]["Long"]);
-
-            minLat      = Math.min(lat, minLat);
-            maxLat      = Math.max(lat, maxLat);
-            minLong     = Math.min(long, minLong);
-            maxLong     = Math.max(long, maxLong);
-        }
-        
-        var lat     = (maxLat + minLat) / 2.0;
-        var long    = (maxLong + minLong) / 2.0;
-
-        var activeMarkers = markers;
+        var overlay = null;
 
 
-        var map = new google.maps.Map(d3.select("#map").node(), {
-            zoom: 10,
+        function initMap() {
 
-            center: new google.maps.LatLng(lat, long),
+            var minLat = Infinity;
+            var maxLat = -Infinity;
+            var minLong = Infinity;
+            var maxLong = -Infinity;
 
-            disableDefaultUI: true,
-            draggableCursor: 'default'
-        });
-        google.maps.event.addListener(map, 'zoom_changed', function ()
-        {            
-            activeMarkers = filterStations(map.getZoom());            
-        });
+            for (var i = 0; i < stations.length; i++) {
+                var lat = parseFloat(stations[i]["Lat"]);
+                var long = parseFloat(stations[i]["Long"]);
 
-        map.mapTypes.set('custom', new google.maps.StyledMapType(styleGrey));
-        map.setMapTypeId('custom');
+                minLat = Math.min(lat, minLat);
+                maxLat = Math.max(lat, maxLat);
+                minLong = Math.min(long, minLong);
+                maxLong = Math.max(long, maxLong);
+            }
 
-        activeMarkers.forEach(m => { 
-            var marker = new google.maps.Marker({
-                position: new google.maps.LatLng(m.getLatitude, m.getLongitude),
-                map: map,
-                title: m.name
-            });
-        }); 
-
-        var tooltip = d3.select("body")
-            .append("div")
-            .attr("class", "tooltip")
-            .style("opacity", 0);
-
-        var overlay = new google.maps.OverlayView();      
-        
-
-        overlay.draw = function ()
-        {
-            console.log("draw");
-            d3.select(overlay.getPanes().overlayMouseTarget).selectAll("*").remove();
-            var layer = d3.select(overlay.getPanes().overlayMouseTarget).append("div")
-                .attr("class", "stations");
-
-
-            var projection  = overlay.getProjection();
-            var padding     = 25;
+            var lat = (maxLat + minLat) / 2.0;
+            var long = (maxLong + minLong) / 2.0;
 
             
-            var marker      = layer.selectAll("svg")
-                .data(d3.entries(activeMarkers))
-                .enter()
-                .append("svg:svg")
-                .each(transform)
-                .attr("class", "marker")
+
+
+            var map = new google.maps.Map(d3.select("#map").node(), {
+                zoom: 10,
+
+                center: new google.maps.LatLng(lat, long),
+
+                disableDefaultUI: true,
+                draggableCursor: 'default'
+            });
+
+            google.maps.event.addListener(map, 'zoom_changed', function () {
+                currentState = new State(currentState.year1, currentState.year2, currentState.value, map.getZoom());
+            });
+
+            map.mapTypes.set('custom', new google.maps.StyledMapType(styleGrey));
+            map.setMapTypeId('custom');
+
+            markers.forEach(m => {
+                var marker = new google.maps.Marker({
+                    position: new google.maps.LatLng(m.getLatitude, m.getLongitude),
+                    map: map,
+                    title: m.name
+                });
+            });
+
+            var tooltip = d3.select("body")
+                .append("div")
+                .attr("class", "tooltip")
+                .style("opacity", 0);
+
+
+            overlay = new google.maps.OverlayView();
+
+
+            overlay.draw = function () {
+
+                // Calculate the current markers
+                var activeMarkers = calculateMarkers(currentState);
+
+                console.log("draw");
+                d3.select(overlay.getPanes().overlayMouseTarget).selectAll("*").remove();
+
+                var layer = d3.select(overlay.getPanes().overlayMouseTarget).append("div")
+                    .attr("class", "stations");
+
+
+                var marker = layer.selectAll("svg")
+                    .data(d3.entries(activeMarkers))
+                    .enter()
+                    .append("svg:svg")
+                    .attr("class", "marker")
+                    .attr("transform", (d) => {
+                        var angle = d.value.getRotation;
+                        d = new google.maps.LatLng(d.value.getLatitude, d.value.getLongitude);
+                        d = overlay.getProjection().fromLatLngToDivPixel(d);
+
+                        var x = d.x - 20;
+                        var y = d.y - 20;
+                        return "translate(" + x + " " + y + ") rotate(" + angle + " 0 0)";
+                    })
                     .on("mouseover", function (d) {
-                        
                         tooltip.transition()
                             .duration(200)
                             .style("opacity", .9);
@@ -143,40 +164,74 @@
                         tooltip.transition()
                             .duration(200)
                             .style("opacity", 0);
-                });       
+                    });
 
 
-            marker.append("svg:path")
-                .attr("d", "M75.671,48.659l-50-25c-0.543-0.272-1.192-0.19-1.65,0.206c-0.458,0.395-0.634,1.026-0.446,1.602l7.851,24.043  l-7.856,25.042c-0.18,0.574,0.001,1.201,0.459,1.591c0.277,0.236,0.623,0.358,0.973,0.358c0.229,0,0.458-0.052,0.671-0.158l50-25  c0.508-0.254,0.829-0.773,0.829-1.342S76.179,48.913,75.671,48.659z")
-                .attr("clip-rule", "evenodd")
-                .attr("fill", "#0D0D0D")
-                .attr("fill-rule", "evenodd")
-                .attr("transform", (d) => "scale(0.6) translate (-15 -16) rotate(" + d.value.getRotation.toString() + " 50 50)");
+                marker.append("svg:path")
+                    .attr("d", "M75.671,48.659l-50-25c-0.543-0.272-1.192-0.19-1.65,0.206c-0.458,0.395-0.634,1.026-0.446,1.602l7.851,24.043  l-7.856,25.042c-0.18,0.574,0.001,1.201,0.459,1.591c0.277,0.236,0.623,0.358,0.973,0.358c0.229,0,0.458-0.052,0.671-0.158l50-25  c0.508-0.254,0.829-0.773,0.829-1.342S76.179,48.913,75.671,48.659z")
+                    .attr("clip-rule", "evenodd")
+                    .attr("fill", "#0D0D0D")
+                    .attr("fill-rule", "evenodd")
+                    .attr("transform", (d) => "scale(0.6) translate (-16 -18)");
 
 
-            marker.append("svg:path")
-                .attr("d", "M75.671,48.659l-50-25c-0.543-0.272-1.192-0.19-1.65,0.206c-0.458,0.395-0.634,1.026-0.446,1.602l7.851,24.043  l-7.856,25.042c-0.18,0.574,0.001,1.201,0.459,1.591c0.277,0.236,0.623,0.358,0.973,0.358c0.229,0,0.458-0.052,0.671-0.158l50-25  c0.508-0.254,0.829-0.773,0.829-1.342S76.179,48.913,75.671,48.659z")
-                .attr("clip-rule", "evenodd")
-                .attr("fill", (d) => d.value.getColor)
-                .attr("fill-rule", "evenodd")
-                .attr("transform", (d) => "scale(0.5) translate(-8 -10) rotate(" + d.value.getRotation.toString() + " 50 50)");
-            
+                marker.append("svg:path")
+                    .attr("d", "M75.671,48.659l-50-25c-0.543-0.272-1.192-0.19-1.65,0.206c-0.458,0.395-0.634,1.026-0.446,1.602l7.851,24.043  l-7.856,25.042c-0.18,0.574,0.001,1.201,0.459,1.591c0.277,0.236,0.623,0.358,0.973,0.358c0.229,0,0.458-0.052,0.671-0.158l50-25  c0.508-0.254,0.829-0.773,0.829-1.342S76.179,48.913,75.671,48.659z")
+                    .attr("clip-rule", "evenodd")
+                    .attr("fill", (d) => d.value.getColor)
+                    .attr("fill-rule", "evenodd")
+                    .attr("transform", (d) => "scale(0.5) translate(-9 -12)");
 
-            function transform(d) {
-                d = new google.maps.LatLng(d.value.getLatitude, d.value.getLongitude);
-                d = projection.fromLatLngToDivPixel(d);
-                return d3.select(this)
-                    .style("left", (d.x)  - 25.0 + "px")
-                    .style("top", (d.y) - 25.0 + "px");
-            }
-        };
+            };
 
-       
-        Mousetrap.bind('+', function (e, n) { markers = markers.map((marker) => new Marker(marker.id, marker.name, marker.lat, marker.long, marker.year1, marker.value1, marker.year2, marker.value2 + 0.1)); overlay.draw(); });
-        Mousetrap.bind('-', function (e, n) { markers = markers.map((marker) => new Marker(marker.id, marker.name, marker.lat, marker.long, marker.year1, marker.value1, marker.year2, marker.value2 - 0.1)); overlay.draw(); });
 
-        // Bind our overlay to the map…
-        overlay.setMap(map);
+            // Bind our overlay to the map…
+            overlay.setMap(map);
+        }
+
+        
+        function initSelect() {
+            $("#selection").on("change", function () {
+                var id = "#description_" + $(this).val();
+                $(id).show().siblings().hide();
+                overlay.draw();
+            });
+
+            document.getElementById('selection').selectedIndex = 0;
+            $('#description_temperature').show().siblings().hide();
+
+        }
+
+
+        function initSlider() {
+            $("#year_slider").slider({
+                range: true,
+                min: 1969,
+                max: 2014,
+                values: [currentState.year1, currentState.year2],
+                slide: function (event, ui) {
+                    // Update current State
+                    currentState = new State(ui.values[0], ui.values[1], currentState.value, currentState.zoom);
+
+                    // Update labels
+                    $("#year1").val(currentState.year1);
+                    $("#year2").val(currentState.year2);
+
+                    overlay.draw();
+                }
+            });
+
+            // Init labels
+            $("#year1").val(currentState.year1);
+            $("#year2").val(currentState.year2);
+        }
+
+        $(initMap());
+        $(initSlider());
+        $(initSelect());
+        
     </script>
-</body>
-</html>
+    
+   
+</body >
+</html >

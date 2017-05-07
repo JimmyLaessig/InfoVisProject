@@ -14,6 +14,8 @@ class Marker
         this.value1 = value1;
         this.value2 = value2;    
     }
+
+
     get getId()
     {
         return id;
@@ -80,7 +82,7 @@ class Marker
     }
 
 
-    static average(markers)
+    static group(markers)
     {
         
         if (markers.length <= 0)
@@ -88,17 +90,26 @@ class Marker
 
         var value1 = 0.0;
         var value2 = 0.0;
-        var lat     = 0.0;
-        var long    = 0.0;
+
+        var minLat = Infinity;
+        var maxLat = -Infinity;
+        var minLong = Infinity;
+        var maxLong = -Infinity;
+
 
         var id      = "";
         var name    = "";
 
         markers.forEach((element) => {
+
+            minLat  = Math.min (element.lat, minLat);
+            maxLat  = Math.max (element.lat, maxLat);
+            minLong = Math.min (element.long, minLong);
+            maxLong = Math.max (element.long, maxLong);
+
             value1  += element.value1;
             value2  += element.value2;
-            lat     += element.lat;
-            long    += element.long;
+            
             id      += element.id + "/";
             name    += element.name + "/";
         });
@@ -106,12 +117,16 @@ class Marker
         id      = id.substring(0, id.length - 1);
         name    = name.substring(0, name.length - 1);
 
-        lat     = lat    / markers.length;
-        long    = long   / markers.length;
+        var lat     = (maxLat + minLat) / 2.0;
+        var long    = (maxLong + minLong) / 2.0;
+
+
         value1  = value1 / markers.length;
         value2  = value2 / markers.length;
 
         return new Marker(id, name, lat, long, markers[0].year1, value1, markers[0].year2, value2);
     }
 
+
+    
 }
