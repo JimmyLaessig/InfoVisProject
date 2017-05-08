@@ -6,8 +6,8 @@ open Data
 [<EntryPoint>]
 let main argv = 
     let path        = "SFBay.csv"
-    let path_out    = "C:\Users\Bernhard\Desktop\SFBay_averaged.csv"
-
+    let path_out    = "SFBay_averaged.csv"
+    let path_json   = "InfoVisProject.App/data/data.js"
     let lines       = File.ReadAllLines(path)|> Array.map (fun line -> line.Split(';') )
                                         
    
@@ -17,9 +17,9 @@ let main argv =
 
     let timeStamp           = data |> Array.map(fun line -> line.[0].Substring(0, 4))
     let stationNumber       = data |> Array.map(fun line -> line.[1])
-    let discreteChlorophyll = data |> Array.map(fun line -> line.[4])   |> Array.map (fun sample -> sample.Replace('.',','))
-    let salinity            = data |> Array.map(fun line -> line.[17])  |> Array.map (fun sample -> sample.Replace('.',','))
-    let temperature         = data |> Array.map(fun line -> line.[18])  |> Array.map (fun sample -> sample.Replace('.',','))
+    let discreteChlorophyll = data |> Array.map(fun line -> line.[4])  (* |> Array.map (fun sample -> sample.Replace('.',','))*)
+    let salinity            = data |> Array.map(fun line -> line.[17]) (* |> Array.map (fun sample -> sample.Replace('.',','))*)
+    let temperature         = data |> Array.map(fun line -> line.[18]) (* |> Array.map (fun sample -> sample.Replace('.',','))*)
     
     // Reduced Dimensions
     let data =  timeStamp |> Array.mapi (fun i t -> [|t ; stationNumber.[i];discreteChlorophyll.[i];salinity.[i];temperature.[i]|])
@@ -31,22 +31,22 @@ let main argv =
     let nonStandardStations = [|"662";"659";"655";"654";"653";"652";"651";"650";"411";"407";"405";"12.5";"19";"28.5"; "5"; "6"; "7"|]
 
 
-    
+    //System.Double.Parse(
     
     
     let samples = data |> Array.map (fun sample -> 
                                             let c = 
                                                 match sample.[2] with 
                                                 | ""    -> None
-                                                | _     -> Some (System.Double.Parse(sample.[2]))
+                                                | _     -> Some (System.Double.Parse(sample.[2], Globalization.NumberStyles.AllowDecimalPoint))
                                             let s = 
                                                 match sample.[3] with 
                                                 | ""    -> None
-                                                | _     -> Some (System.Double.Parse(sample.[3]))
+                                                | _     -> Some (System.Double.Parse(sample.[3], Globalization.NumberStyles.AllowDecimalPoint))
                                             let t = 
                                                 match sample.[4] with 
                                                 | ""    -> None
-                                                | _     -> Some (System.Double.Parse(sample.[4]))
+                                                | _     -> Some (System.Double.Parse(sample.[4], Globalization.NumberStyles.AllowDecimalPoint))
                                             
                                             {
                                             year                = sample.[0]
@@ -112,7 +112,7 @@ let main argv =
     
     // Build averaged samples
     Data.WriteToFile path_out header samplesAveraged  
-    
+    Data.WriteToJson path_json samplesAveraged
     printfn "Press any key to close..."
     Console.ReadKey() |> ignore
     0
