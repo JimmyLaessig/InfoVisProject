@@ -33,9 +33,9 @@
             <select id="selection" size="3">
                 <option value="temperature">Temperature</option>
                 <option value="salinity">Salinity</option>
-                <option value="chlorophyll">Discrete Chlorophyll</option>
+                <option value="discreteChlorophyll">Discrete Chlorophyll</option>
             </select>
-
+            
             <div id="description">
                 <div id="description_temperature">
                     <a href="https://sfbay.wr.usgs.gov/access/wqdata/overview/measure/ctd/profiles/temp_prof.html">Temperature</a> measured in degrees Centigrade.
@@ -109,13 +109,13 @@
             map.mapTypes.set('custom', new google.maps.StyledMapType(styleGrey));
             map.setMapTypeId('custom');
 
-            markers.forEach(m => {
-                var marker = new google.maps.Marker({
-                    position: new google.maps.LatLng(m.getLatitude, m.getLongitude),
-                    map: map,
-                    title: m.name
-                });
-            });
+            //markers.forEach(m => {
+            //    var marker = new google.maps.Marker({
+            //        position: new google.maps.LatLng(m.getLatitude, m.getLongitude),
+            //        map: map,
+            //        title: m.name
+            //    });
+            //});
 
             var tooltip = d3.select("body")
                 .append("div")
@@ -125,31 +125,33 @@
 
             overlay = new google.maps.OverlayView();
 
-
             overlay.draw = function () {
 
                 // Calculate the current markers
                 var activeMarkers = calculateMarkers(currentState);
-
-                console.log("draw");
+               
+                var y = d3.select(overlay.getPanes().overlayMouseTarget);
+                
                 d3.select(overlay.getPanes().overlayMouseTarget).selectAll("*").remove();
 
                 var layer = d3.select(overlay.getPanes().overlayMouseTarget).append("div")
                     .attr("class", "stations");
 
-
+                
                 var marker = layer.selectAll("svg")
                     .data(d3.entries(activeMarkers))
                     .enter()
                     .append("svg:svg")
                     .attr("class", "marker")
                     .attr("transform", (d) => {
+
                         var angle = d.value.getRotation;
                         d = new google.maps.LatLng(d.value.getLatitude, d.value.getLongitude);
                         d = overlay.getProjection().fromLatLngToDivPixel(d);
 
                         var x = d.x - 20;
                         var y = d.y - 20;
+                        
                         return "translate(" + x + " " + y + ") rotate(" + angle + " 0 0)";
                     })
                     .on("mouseover", function (d) {
@@ -172,7 +174,7 @@
                     .attr("clip-rule", "evenodd")
                     .attr("fill", "#0D0D0D")
                     .attr("fill-rule", "evenodd")
-                    .attr("transform", (d) => "scale(0.6) translate (-16 -18)");
+                    .attr("transform", "scale(0.6) translate (-16 -18)");
 
 
                 marker.append("svg:path")
@@ -180,10 +182,9 @@
                     .attr("clip-rule", "evenodd")
                     .attr("fill", (d) => d.value.getColor)
                     .attr("fill-rule", "evenodd")
-                    .attr("transform", (d) => "scale(0.5) translate(-9 -12)");
+                    .attr("transform", "scale(0.5) translate(-9 -12)");
 
             };
-
 
             // Bind our overlay to the map…
             overlay.setMap(map);
@@ -194,12 +195,14 @@
             $("#selection").on("change", function () {
                 var id = "#description_" + $(this).val();
                 $(id).show().siblings().hide();
+                
+                currentState = new State(currentState.year1, currentState.year2, $(this).val(), currentState.zoom);
                 overlay.draw();
             });
 
             document.getElementById('selection').selectedIndex = 0;
             $('#description_temperature').show().siblings().hide();
-
+            
         }
 
 

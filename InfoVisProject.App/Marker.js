@@ -49,10 +49,15 @@ class Marker
 
 
     get getRotation()
-    {       
-        var diff        = this.value2 - this.value1;        
-        var rotation    = -diff * 100.0;     
-        return Math.min(90.0, Math.max(-90.0, rotation));      
+    {
+        if (this.value2 == null || this.value1 == null)
+        {
+            return 0.0;
+        }
+        return -45;
+        //var diff = this.value2 - this.value1;        
+        //var rotation    = -diff * 100.0;     
+        //return Math.min(90.0, Math.max(-90.0, rotation));      
     }
 
     get getLatitude()
