@@ -17,6 +17,9 @@ function groupBy(a, keyFunction) {
 };
 
 
+
+
+
 function split (arr, chunkSize) {
     var groups = [], i;
     for (i = 0; i < arr.length; i += chunkSize) {
@@ -31,4 +34,13 @@ function distinctBy(a, key) {
         var k = key(item);
         return seen.hasOwnProperty(k) ? false : (seen[k] = true);
     })
+}
+
+function choose(a, condidtion, map) {
+    return a.reduce(function (res, val) {
+        if (condidtion(val)) {
+            res.push(map(val));
+        }
+        return res;
+    }, []);
 }

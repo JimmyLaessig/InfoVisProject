@@ -74,7 +74,7 @@ body {
 .marker {
     margin: 0;
     position: absolute;
-    background: rgba(0,0,0, 0.0);
+    background: rgba(0, 0, 0, 0);
     width: 40px;
     height: 40px;
 }

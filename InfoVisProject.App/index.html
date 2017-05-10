@@ -16,6 +16,7 @@
 
     <script src="./data/mapStyles.js" charset="utf-8"></script>
     <script src="./data/stations.js" charset="utf-8"></script>
+    <script src="./data/svgPath.js" charset="utf-8"></script>
     <script src="./Marker.js" charset="utf-8"></script>
     <script src="./Manager.js" charset="utf-8"></script>
     <link rel="stylesheet" href = "style.css">    
@@ -170,20 +171,19 @@
 
 
                 marker.append("svg:path")
-                    .attr("d", "M75.671,48.659l-50-25c-0.543-0.272-1.192-0.19-1.65,0.206c-0.458,0.395-0.634,1.026-0.446,1.602l7.851,24.043  l-7.856,25.042c-0.18,0.574,0.001,1.201,0.459,1.591c0.277,0.236,0.623,0.358,0.973,0.358c0.229,0,0.458-0.052,0.671-0.158l50-25  c0.508-0.254,0.829-0.773,0.829-1.342S76.179,48.913,75.671,48.659z")
+                    .attr("d", (m) => (m.value.containsNull) ? nA : arrow)
                     .attr("clip-rule", "evenodd")
-                    .attr("fill", "#0D0D0D")
+                    .attr("fill", (m) => (m.value.containsNull) ? "#444444" : "#0D0D0D")
                     .attr("fill-rule", "evenodd")
-                    .attr("transform", "scale(0.6) translate (-16 -18)");
-
-
+                    .attr("transform", m => (m.value.containsNull) ? "translate(5 5) scale(0.1) " : "scale(0.6) translate (-16 -18)")
+                    
                 marker.append("svg:path")
-                    .attr("d", "M75.671,48.659l-50-25c-0.543-0.272-1.192-0.19-1.65,0.206c-0.458,0.395-0.634,1.026-0.446,1.602l7.851,24.043  l-7.856,25.042c-0.18,0.574,0.001,1.201,0.459,1.591c0.277,0.236,0.623,0.358,0.973,0.358c0.229,0,0.458-0.052,0.671-0.158l50-25  c0.508-0.254,0.829-0.773,0.829-1.342S76.179,48.913,75.671,48.659z")
+                    .attr("d", m => (m.value.containsNull) ? "" : arrow)
                     .attr("clip-rule", "evenodd")
                     .attr("fill", (d) => d.value.getColor)
                     .attr("fill-rule", "evenodd")
                     .attr("transform", "scale(0.5) translate(-9 -12)");
-
+  
             };
 
             // Bind our overlay to the map…
@@ -227,11 +227,13 @@
             // Init labels
             $("#year1").val(currentState.year1);
             $("#year2").val(currentState.year2);
-        }
+        }  
 
         $(initMap());
         $(initSlider());
         $(initSelect());
+
+
         
     </script>
     
