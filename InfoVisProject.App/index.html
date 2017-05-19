@@ -17,7 +17,6 @@
     <script src="./data/mapStyles.js" charset="utf-8"></script>
     <script src="./data/stations.js" charset="utf-8"></script>
     <script src="./data/svgPath.js" charset="utf-8"></script>
-    <script src="./Marker.js" charset="utf-8"></script>
     <script src="./Manager.js" charset="utf-8"></script>
     <link rel="stylesheet" href = "style.css">    
 </head>
@@ -71,8 +70,9 @@
     <script type="text/javascript">
 
         var overlay = null;
-        var manager = new Manager(new State("1969", "2013", "temperature", 10));
-
+        var manager = new Manager(new State(1969, 2013, "temperature", 10));
+        manager.SelectedMarker = new Marker(["2"], 0, 0, 0, 0, 0, []);
+        
 
         function initMap() {
 
@@ -108,6 +108,14 @@
                 // Calculate the current markers
                 var activeMarkers = manager.getMarkerLoD(manager.State);
 
+              
+
+                //manager.selectedMarker = activeMarkers.find(m => m.Contains(manager.selectedMarker));
+               
+
+                //var selectedMarker = activeMarkers.find(marker => marker.Id == manager.selectedMarker.Id);
+               
+
                 var y = d3.select(overlay.getPanes().overlayMouseTarget);
                 
                 d3.select(overlay.getPanes().overlayMouseTarget).selectAll("*").remove();
@@ -138,7 +146,7 @@
                         tooltip.transition()
                             .duration(200)
                             .style("opacity", .9);
-                        tooltip.html(d.value.Tooltip)
+                        tooltip.html(d.value.ToolTip)
                             .style("left", (d3.event.pageX + 5) + "px")
                             .style("top", (d3.event.pageY - 28) + "px");
                     })
@@ -193,7 +201,7 @@
                 values: [manager.State.year1, manager.State.year2],
                 slide: function (event, ui) {
                     // Update current State
-                    manager.State = new State(ui.values[0], ui.values[1], manager.State.value, manager.State.zoom);
+                    manager.State = new State(parseInt(ui.values[0]), parseInt(ui.values[1]), manager.State.value, manager.State.zoom);
 
                     // Update labels
                     $("#year1").val(manager.State.year1);
@@ -224,7 +232,7 @@
         $(initSlider());
         $(initSelect());
 
-        manager.SelectedMarker = manager.getMarkerLoD(manager.State)[0];
+       
         
     </script>
     

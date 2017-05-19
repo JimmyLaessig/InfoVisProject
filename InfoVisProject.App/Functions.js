@@ -1,4 +1,5 @@
 ﻿
+
 function groupBy(a, keyFunction) {
     var groups = {};
     a.forEach(function (el) {
@@ -71,6 +72,19 @@ function calcLeastSquares(x, y) {
     return {b0 : b0, b1 : b1};
 }
 
+// Calculates the center value from a sequence (max + min) / 2
+function center(a)
+{
+	var min = Infinity;
+	var max = -Infinity;
+	
+	a.forEach(v => {
+		min = Math.min(v, min);
+		max = Math.max(v, max);
+	});
+
+	return (min + max) / 2;
+}
 
 function sum(a) {
     return a.reduce((acc, val) => acc + val, 0.0);

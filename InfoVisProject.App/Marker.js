@@ -1,9 +1,15 @@
 ﻿
 
+function Tuple(year, value) {
+	this.year = year;
+	this.value = value;
+}
+
+
 class Marker
 {
 
-    constructor(id, name, lat, long, from, to, slope, values)
+	constructor(id, name, lat, long, from, to, slope, samples)
     {
         this.id     = id;
         this.name   = name;
@@ -11,8 +17,8 @@ class Marker
         this.long   = long;
         this.from   = from;
         this.to     = to;
-        this.slope = slope;
-        this.values = values;
+        this.slope	= slope;
+		this.samples = samples;
     }
 
 
@@ -23,7 +29,7 @@ class Marker
     get From()      {return this.from;}
     get To()        {return this.to;}
     get Slope()     {return this.slope;}
-
+	get Samples() { return this.samples; }
 
     get ToolTip()
     {
@@ -70,61 +76,48 @@ class Marker
             var interpolate = d3.interpolateRgb("yellow", "green");
             return interpolate(i);
         }
-    }
+	}
 
 
     static group(marker) {
+		
+		var count = marker.length;
 
-        if (marker.length <= 0) {
+
+		if (count <= 0)
+		{
             return null;
         }
 
-        var slope = 0.0;
 
-        var count = 0.0;
-        var count2 = 0.0;
+		var id = [].concat.apply([], marker.map(m => m.Id));
+		
+		var name	= [].concat.apply([], marker.map(m => m.Name));
 
-        var minLat = Infinity;
-        var maxLat = -Infinity;
-        var minLong = Infinity;
-        var maxLong = -Infinity;
-      
-        var id = "";
-        var name = "";
+		var lat		= center(marker.map(m => m.Latitude));
+		var long	= center(marker.map(m => m.Longitude));
 
-        marker.forEach((element) => {
+		
+		var slopes	= marker.filter(m => m.Slope != null && !isNaN(m.Slope));
+		var slope	= (slopes.length > 0) ? avgBy(slopes, m => m.Slope) : null;	
 
-            minLat = Math.min(element.lat, minLat);
-            maxLat = Math.max(element.lat, maxLat);
-            minLong = Math.min(element.long, minLong);
-            maxLong = Math.max(element.long, maxLong);
+        var year1	= marker[0].From;
+        var year2	= marker[0].To;      
 
-            if (element.Slope != null)
-            {
-                slope += element.Slope;
-                count++;
-            }
-           
-            id += element.id + "/";
-            name += element.name + "/";
-
-
-        });
-
-        var lat = (minLat + maxLat) / 2.0;
-        var long = (minLong + maxLong) / 2.0;
-
-        id      = id.substring(0, id.length - 1);
-        name    = name.substring(0, name.length - 1);
-
-
-        var year1 = marker[0].year1;
-        var year2 = marker[0].year2;
-
-
-        slope = (count == 0) ? null : slope / count;
-        
-
-        return new Marker(id, name, lat, long, year1, year2, 0, []);
+		// Get the sample from the marker
+		var samples = marker.map(m => m.Samples);
+		// Concat 2D Array to 1D Array
+		var samples = [].concat.apply([], samples);
+		// Group samples by year
+		var samples = groupBy(samples, s => s.year + "");
+		// Average grouped samples
+		var samples = samples.map(o => new Tuple(parseInt(o.key), avgBy(o.values, t => t.value)));
+		
+		return new Marker(id, name, lat, long, year1, year2, slope, samples);
     }   
 }
+
+
+Marker.prototype.Contains = function (marker) {
+	return marker.id.every(id => id in this.Id);
+};

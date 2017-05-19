@@ -1,6 +1,8 @@
 ﻿document.write('<script type="text/javascript" src="./data/stations.js" ></script>');
 document.write('<script type="text/javascript" src="./data/data.js" ></script>');
 document.write('<script type="text/javascript" src="./Functions.js" ></script>');
+document.write('<script src="./Marker.js" charset="utf-8"></script>');
+
 
 
 function State(year1, year2, value, zoom) {
@@ -21,7 +23,7 @@ class Manager {
     }
 
     set SelectedMarker(value)
-    {
+	{
         this.selectedMarker = value;
     }
 
@@ -49,9 +51,9 @@ class Manager {
         var minLong = Infinity;
         var maxLong = -Infinity;
 
-        for (var i = 0; i < stations.length; i++) {
-            var lat = parseFloat(stations[i]["Lat"]);
-            var long = parseFloat(stations[i]["Long"]);
+		for (var i = 0; i < stations.length; i++) {
+			var lat = parseFloat(stations[i].Lat);
+			var long = parseFloat(stations[i].Long);
 
             minLat = Math.min(lat, minLat);
             maxLat = Math.max(lat, maxLat);
@@ -68,26 +70,29 @@ class Manager {
 
     getMarker(state) {
         
-        var data_clamped = data.filter(v => parseInt(v["year"]) >= parseInt(state.year1) &&
-                                            parseInt(v["year"]) <= parseInt(state.year2) &&
+        var data_clamped = data.filter(v => parseInt(v["year"]) >= state.year1 &&
+                                            parseInt(v["year"]) <= state.year2 &&
                                             v[state.value] != null);
-        
+
+
         var marker = stations.map(station => {
 
-            var values  = data_clamped.filter((v) => v["station"] == station.Id && v[state.value] != null);
-            
-            var lat     = parseFloat(station["Lat"]);
-            var long    = parseFloat(station["Long"]);
+			var lat		= parseFloat(station.Lat);
+			var long	= parseFloat(station.Long);
 
-            // Normalize data to 0..1
-            var values = values.map(v => v[state.value].Value);
-            var years = values.map(v => parseInt(v["year"]) - parseInt(state.year1));
 
+			// Get samples for this station
+			var samples = data_clamped.filter((v) => v["station"] == station.Id && v[state.value] != null);
+
+			
+			var values	= samples.map(sample => sample[state.value].Value);
+			var years	= samples.map(sample => parseInt(sample["year"]));
+  
+
+			// Normalize data to 0..1
             var xn = normalize(values);
             var yn = normalize(years);
 
-            //console.log("Max: " + Math.max(...values));
-            //console.log("Min: " + Math.min(...values));
 
             var value1 = calcLeastSquares(values, yn);
             var value2 = calcLeastSquares(xn, yn);
@@ -95,18 +100,9 @@ class Manager {
             var angle1 = Math.atan(value1.b1) * Math.PI / 180;
             var angle2 = Math.atan(value2.b1) * Math.PI / 180;
 
-            //console.log("Id " + station.Id + ": #measures : " + x.length + " b0: " + value.b0 + " b1: " + value.b1);
-            //console.log("Angle1: " + angle1);
-            //console.log("Angle2: " + angle2);
-
-            var value1 = (value1 != undefined) ? value1[state.value] : null;
-            var value2 = (value2 != undefined) ? value2[state.value] : null;
-
-            var value1 = (value1 != null) ? value1.Value : null;
-            var value2 = (value2 != null) ? value2.Value : null;
-
-
-            return new Marker(station["Id"], station["Name"], lat, long, state.year1, state.year2, angle2, [] );
+			var samples = values.map((val, i) => new Tuple(years[i], val));
+			
+			return new Marker([station.Id], [station.Name], lat, long, state.year1, state.year2, angle2, samples );
 
         });
 
@@ -158,7 +154,6 @@ class Manager {
         //}
 
         
-
         return values;
     }
 }
