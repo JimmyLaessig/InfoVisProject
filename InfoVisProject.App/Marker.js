@@ -3,78 +3,61 @@
 class Marker
 {
 
-    constructor(id, name, lat, long, year1, value1, year2, value2)
+    constructor(id, name, lat, long, from, to, slope, values)
     {
-        this.id = id;
-        this.name = name;
-        this.lat = lat;
-        this.long = long;
-        this.year1 = year1;
-        this.year2 = year2;
-        this.value1 = value1;
-        this.value2 = value2;    
+        this.id     = id;
+        this.name   = name;
+        this.lat    = lat;
+        this.long   = long;
+        this.from   = from;
+        this.to     = to;
+        this.slope = slope;
+        this.values = values;
     }
 
 
-    get getId()
+    get Id()        {return this.id; }
+    get Name()      {return this.name;}
+    get Latitude()  {return this.lat; }
+    get Longitude() {return this.long; }
+    get From()      {return this.from;}
+    get To()        {return this.to;}
+    get Slope()     {return this.slope;}
+
+
+    get ToolTip()
     {
-        return id;
-    }
-    get getYear1()
-    {
-        return this.year1;
-    }
-    get getYear2()
-    {
-        return this.year2;
-    }
-    get getValue1()
-    {
-        return this.value1;
-    }
-    get getValue2()
-    {
-        return this.value2;
-    }
-    get getTooltip()
-    {
-        let value1Text = (this.value1 == null) ? "n.A." : this.value1 + "";
-        let value2Text = (this.value2 == null) ? "n.A." : this.value2 + "";
+        //let value1Text = (this.value1 == null) ? "n.A." : this.value1 + "";
+        //let value2Text = (this.value2 == null) ? "n.A." : this.value2 + "";
 
         let html =
-            '<p>' + this.name + '</p>' +
-            '<ul style="list-style-type:none"> '+
-            '<li>' + this.year1 + ": " + value1Text+'</li>'+
-            '<li>' + this.year2 + ": " + value2Text+'</li>'+            
-            '</ul>';
+            '<p>' + this.name + '</p>';
+            //'<ul style="list-style-type:none"> '+
+            //'<li>' + this.year1 + ": " + value1Text+'</li>'+
+            //'<li>' + this.year2 + ": " + value2Text+'</li>'+            
+            //'</ul>';
         return html;
     }
 
 
-    get getRotation()
+
+    get Rotation()
     {
-        if (this.value1 == null || this.value2 == null)
+        if (this.slope == null )
         {
             return 0.0;
         }
         
-        var diff = this.value2 - this.value1;        
-        var rotation    = -diff * 100.0;     
-        return Math.min(90.0, Math.max(-90.0, rotation));      
+        //var diff = this.value2 - this.value1;        
+        //var rotation    = -diff * 100.0;    
+        return this.slope;
+        //return Math.min(90.0, Math.max(-90.0, rotation));      
     }
 
-    get getLatitude()
-    {
-        return this.lat;
-    }
+   
 
-    get getLongitude()
-    {
-        return this.long;
-    }
-
-    get getColor() {
-        var rotation = this.getRotation;
+    get Color() {
+        var rotation = this.Rotation;
         if (rotation < 0) {
            
             var i = (-rotation / 90.0);
@@ -89,10 +72,6 @@ class Marker
         }
     }
 
-    get containsNull()
-    {
-        return this.value1 == null || this.value2 == null;
-    }
 
     static group(marker) {
 
@@ -100,10 +79,9 @@ class Marker
             return null;
         }
 
-        var value1 = 0.0;
-        var value2 = 0.0;
+        var slope = 0.0;
 
-        var count1 = 0.0;
+        var count = 0.0;
         var count2 = 0.0;
 
         var minLat = Infinity;
@@ -121,18 +99,16 @@ class Marker
             minLong = Math.min(element.long, minLong);
             maxLong = Math.max(element.long, maxLong);
 
-            if (element.value1 != null)
+            if (element.Slope != null)
             {
-                value1 += element.value1;
-                count1++;
+                slope += element.Slope;
+                count++;
             }
-            if (element.value2 != null)
-            {
-                value2 += element.value2;
-                count2++;
-            }
+           
             id += element.id + "/";
             name += element.name + "/";
+
+
         });
 
         var lat = (minLat + maxLat) / 2.0;
@@ -146,9 +122,9 @@ class Marker
         var year2 = marker[0].year2;
 
 
-        value1 = (count1 == 0) ? null : value1 / count1;
-        value2 = (count2 == 0) ? null : value2 / count2;
+        slope = (count == 0) ? null : slope / count;
+        
 
-        return new Marker(id, name, lat, long, year1, value1, year2, value2);
+        return new Marker(id, name, lat, long, year1, year2, 0, []);
     }   
 }

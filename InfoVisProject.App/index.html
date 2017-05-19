@@ -44,7 +44,7 @@
                 <div id="description_salinity">
                     A measure of the salt content of water, which can be estimated accurately from measures of conductivity and temperature; salinity is measured in practical salinity units (psu), and the salinity of river water is often about 0.1 psu while the salinity of coastal Pacific Ocean water is about 33-34 psu; measures of salinity in the Bay tell the relative proportions of river water and ocean water at different locations.
                 </div>
-                <div id="description_chlorophyll">
+                <div id="description_discreteChlorophyll">
                     Discrete measurement of <a href="https://sfbay.wr.usgs.gov/access/wqdata/guide/glossary.html#Chlor">chlorophyll a</a> a concentration, in units of milligrams per cubic meter (equivalent to micrograms per liter). This discrete measurement is made by laboratory analysis of the chlorophyll content of a water sample collected onto a filter.
                 </div>
             </div>
@@ -62,61 +62,37 @@
         <div id="year_slider"></div>
 
 
-        <!--<div id="lineplot"></div>-->
+        <div id="lineplot">
+            <p>asdassd</p>
+        </div>
     </div >
 
 
     <script type="text/javascript">
 
         var overlay = null;
+        var manager = new Manager(new State("1969", "2013", "temperature", 10));
 
 
         function initMap() {
 
-            var minLat = Infinity;
-            var maxLat = -Infinity;
-            var minLong = Infinity;
-            var maxLong = -Infinity;
-
-            for (var i = 0; i < stations.length; i++) {
-                var lat = parseFloat(stations[i]["Lat"]);
-                var long = parseFloat(stations[i]["Long"]);
-
-                minLat = Math.min(lat, minLat);
-                maxLat = Math.max(lat, maxLat);
-                minLong = Math.min(long, minLong);
-                maxLong = Math.max(long, maxLong);
-            }
-
-            var lat = (maxLat + minLat) / 2.0;
-            var long = (maxLong + minLong) / 2.0;
-
-            
-
+            var coord = manager.ModalCoordinates;
+            var zoom = manager.State.zoom;
 
             var map = new google.maps.Map(d3.select("#map").node(), {
-                zoom: 10,
-
-                center: new google.maps.LatLng(lat, long),
-
+                zoom: zoom,
+                center: new google.maps.LatLng(coord.lat, coord.long),
                 disableDefaultUI: true,
                 draggableCursor: 'default'
             });
 
             google.maps.event.addListener(map, 'zoom_changed', function () {
-                currentState = new State(currentState.year1, currentState.year2, currentState.value, map.getZoom());
+                manager.State = new State(manager.State.year1, manager.State.year2, manager.State.value, map.getZoom());
             });
 
             map.mapTypes.set('custom', new google.maps.StyledMapType(styleGrey));
             map.setMapTypeId('custom');
 
-            //markers.forEach(m => {
-            //    var marker = new google.maps.Marker({
-            //        position: new google.maps.LatLng(m.getLatitude, m.getLongitude),
-            //        map: map,
-            //        title: m.name
-            //    });
-            //});
 
             var tooltip = d3.select("body")
                 .append("div")
@@ -126,11 +102,12 @@
 
             overlay = new google.maps.OverlayView();
 
+
             overlay.draw = function () {
 
                 // Calculate the current markers
-                var activeMarkers = calculateMarkers(currentState);
-               
+                var activeMarkers = manager.getMarkerLoD(manager.State);
+
                 var y = d3.select(overlay.getPanes().overlayMouseTarget);
                 
                 d3.select(overlay.getPanes().overlayMouseTarget).selectAll("*").remove();
@@ -146,20 +123,22 @@
                     .attr("class", "marker")
                     .attr("transform", (d) => {
 
-                        var angle = d.value.getRotation;
-                        d = new google.maps.LatLng(d.value.getLatitude, d.value.getLongitude);
-                        d = overlay.getProjection().fromLatLngToDivPixel(d);
 
-                        var x = d.x - 20;
-                        var y = d.y - 20;
+                        var coords = new google.maps.LatLng(d.value.Latitude, d.value.Longitude);
+                        coords = overlay.getProjection().fromLatLngToDivPixel(coords);
+
+                        var r = d.value.Rotation;
+                        var x = coords.x - 20;
+                        var y = coords.y - 20;
                         
-                        return "translate(" + x + " " + y + ") rotate(" + angle + " 0 0)";
+
+                        return "translate(" + x + " " + y + ") rotate(" + r + " 0 0)";
                     })
                     .on("mouseover", function (d) {
                         tooltip.transition()
                             .duration(200)
                             .style("opacity", .9);
-                        tooltip.html(d.value.getTooltip)
+                        tooltip.html(d.value.Tooltip)
                             .style("left", (d3.event.pageX + 5) + "px")
                             .style("top", (d3.event.pageY - 28) + "px");
                     })
@@ -167,23 +146,25 @@
                         tooltip.transition()
                             .duration(200)
                             .style("opacity", 0);
-                    });
-
+                    })
+                    .on("click", d => { manager.SelectedMarker = d.value});
 
                 marker.append("svg:path")
-                    .attr("d", (m) => (m.value.containsNull) ? nA : arrow)
+                    .attr("d", (m) => (m.value.Slope == null) ? nA : arrow)
                     .attr("clip-rule", "evenodd")
-                    .attr("fill", (m) => (m.value.containsNull) ? "#444444" : "#0D0D0D")
+                    .attr("fill", (m) => (m.value.Slope == null) ? "#444444" : "#0D0D0D")
                     .attr("fill-rule", "evenodd")
-                    .attr("transform", m => (m.value.containsNull) ? "translate(5 5) scale(0.1) " : "scale(0.6) translate (-16 -18)")
+                    .attr("transform", m => (m.value.Slope == null) ? "translate(5 5) scale(0.1) " : "scale(0.6) translate (-16 -18)")
                     
                 marker.append("svg:path")
-                    .attr("d", m => (m.value.containsNull) ? "" : arrow)
+                    .attr("d", m => (m.value.Slope == null) ? "" : arrow)
                     .attr("clip-rule", "evenodd")
-                    .attr("fill", (d) => d.value.getColor)
+                    .attr("fill", (d) => d.value.Color)
                     .attr("fill-rule", "evenodd")
                     .attr("transform", "scale(0.5) translate(-9 -12)");
-  
+
+                // Update Lineplot as well
+                drawLineplot();
             };
 
             // Bind our overlay to the map…
@@ -195,14 +176,12 @@
             $("#selection").on("change", function () {
                 var id = "#description_" + $(this).val();
                 $(id).show().siblings().hide();
-                
-                currentState = new State(currentState.year1, currentState.year2, $(this).val(), currentState.zoom);
+                manager.State = new State(manager.State.year1, manager.State.year2, $(this).val(), manager.State.zoom);
                 overlay.draw();
             });
 
             document.getElementById('selection').selectedIndex = 0;
             $('#description_temperature').show().siblings().hide();
-            
         }
 
 
@@ -211,29 +190,41 @@
                 range: true,
                 min: 1969,
                 max: 2014,
-                values: [currentState.year1, currentState.year2],
+                values: [manager.State.year1, manager.State.year2],
                 slide: function (event, ui) {
                     // Update current State
-                    currentState = new State(ui.values[0], ui.values[1], currentState.value, currentState.zoom);
+                    manager.State = new State(ui.values[0], ui.values[1], manager.State.value, manager.State.zoom);
 
                     // Update labels
-                    $("#year1").val(currentState.year1);
-                    $("#year2").val(currentState.year2);
+                    $("#year1").val(manager.State.year1);
+                    $("#year2").val(manager.State.year2);
 
                     overlay.draw();
                 }
             });
 
             // Init labels
-            $("#year1").val(currentState.year1);
-            $("#year2").val(currentState.year2);
+            $("#year1").val(manager.State.year1);
+            $("#year2").val(manager.State.year2);
         }  
+
+
+        function drawLineplot() {
+            d3.select("#lineplot").selectAll("*").remove();
+            var rect = d3.select("#lineplot").node().getBoundingClientRect();
+            var width = rect.width;
+            var height = rect.height;
+           
+            var x = manager.LineplotData;
+           
+        }
+
 
         $(initMap());
         $(initSlider());
         $(initSelect());
 
-
+        manager.SelectedMarker = manager.getMarkerLoD(manager.State)[0];
         
     </script>
     

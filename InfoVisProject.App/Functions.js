@@ -16,8 +16,80 @@ function groupBy(a, keyFunction) {
     });
 };
 
+// Normalizes the values in a such that the smallest is mapped to 0 and the largest to 1
+function normalize(a)
+{
+    var max = Math.max(...a);
+    var min = Math.min(...a);
+
+    return a.map(v => (v - min) / (max - min));
+}
+
+function maxBy(a, f)
+{
+    return Math.max(...(a.map(f)));
+}
 
 
+function minBy(a, map)
+{
+    return Math.min(...x(a.map(f)));
+}
+
+// Performs Least Squares Estimation
+// http://www.stat.ufl.edu/~winner/qmb3250/notespart2.pdf
+// Returns the coefficients b0 b1 for the line equation y = b0 + b1 * x
+
+function calcLeastSquares(x, y) {
+
+    var n = x.length;
+
+    var xy = x.map( (value, index) => value + y[index]);
+   
+
+    var sum_x = sum(x);
+    var sum_y = sum(y);
+
+    var sum_xx = sumBy(x, xi => xi * xi);
+    var sum_yy = sumBy(y, yi => yi * yi);
+    var sum_xy = sum(xy);
+    
+
+    var avg_x = sum_x / n;
+    var avg_y = sum_y / n;
+
+
+    var SSxx = sum_xx - (sum_x * sum_x) / n;
+    var SSxy = sum_xy - (sum_x * sum_y) / n;
+    var SSyy = sum_yy - (sum_y * sum_y) / n;
+   
+
+    var b1 = SSxy / SSxx;
+
+    var b0 = avg_y - b1 * avg_x;
+    
+    return {b0 : b0, b1 : b1};
+}
+
+
+function sum(a) {
+    return a.reduce((acc, val) => acc + val, 0.0);
+}
+
+
+function avg(a) {
+    return sum(a) / a.length;
+}
+
+
+function sumBy(a, map) {
+    return a.reduce((acc, val) => acc + map(val), 0.0);
+}
+
+
+function avgBy(a, map) {
+    return a.reduce((acc, val) => acc + map(val), 0.0) / a.length;
+}
 
 
 function split (arr, chunkSize) {
