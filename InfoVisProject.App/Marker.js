@@ -118,6 +118,6 @@ class Marker
 }
 
 
-Marker.prototype.Contains = function (marker) {
-	return marker.id.every(id => id in this.Id);
+Marker.prototype.Contains = function (ids) {
+    return ids.every(id => id in this.Id);
 };

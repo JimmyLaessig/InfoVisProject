@@ -1,6 +1,6 @@
 ﻿<!DOCTYPE html>
 <html>
-<head>    
+<head>
     <title>Google maps GpsSensor layer with D3 for live position update</title>
 
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCdKoISSvWapqmNvTYZI0bWAavX_B7bXeQ"></script>
@@ -9,16 +9,19 @@
     <script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script>
     <script src="https://d3js.org/d3.v4.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mousetrap/1.4.6/mousetrap.js" charset="utf-8"></script>
-    
+
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
     <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
 
     <script src="./data/mapStyles.js" charset="utf-8"></script>
     <script src="./data/stations.js" charset="utf-8"></script>
     <script src="./data/svgPath.js" charset="utf-8"></script>
     <script src="./Manager.js" charset="utf-8"></script>
-    <link rel="stylesheet" href = "style.css">    
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
@@ -27,15 +30,15 @@
         <div id="map"></div>
     </div>
     <div id="right">
-        
+
         <div id="values">
-           
+
             <select id="selection" size="3">
                 <option value="temperature">Temperature</option>
                 <option value="salinity">Salinity</option>
                 <option value="discreteChlorophyll">Discrete Chlorophyll</option>
             </select>
-            
+
             <div id="description">
                 <div id="description_temperature">
                     <a href="https://sfbay.wr.usgs.gov/access/wqdata/overview/measure/ctd/profiles/temp_prof.html">Temperature</a> measured in degrees Centigrade.
@@ -47,7 +50,7 @@
                     Discrete measurement of <a href="https://sfbay.wr.usgs.gov/access/wqdata/guide/glossary.html#Chlor">chlorophyll a</a> a concentration, in units of milligrams per cubic meter (equivalent to micrograms per liter). This discrete measurement is made by laboratory analysis of the chlorophyll content of a water sample collected onto a filter.
                 </div>
             </div>
-        </div >
+        </div>
 
 
 
@@ -62,17 +65,16 @@
 
 
         <div id="lineplot">
-            <p>asdassd</p>
+
         </div>
-    </div >
+    </div>
 
 
     <script type="text/javascript">
 
         var overlay = null;
-        var manager = new Manager(new State(1969, 2013, "temperature", 10));
-        manager.SelectedMarker = new Marker(["2"], 0, 0, 0, 0, 0, []);
-        
+        var manager = new Manager(new State(1969, 2013, "temperature", 10, ["2"]));
+
 
         function initMap() {
 
@@ -87,7 +89,7 @@
             });
 
             google.maps.event.addListener(map, 'zoom_changed', function () {
-                manager.State = new State(manager.State.year1, manager.State.year2, manager.State.value, map.getZoom());
+                manager.State = new State(manager.State.year1, manager.State.year2, manager.State.value, map.getZoom(), manager.State.selectedMarkerId);
             });
 
             map.mapTypes.set('custom', new google.maps.StyledMapType(styleGrey));
@@ -103,29 +105,30 @@
             overlay = new google.maps.OverlayView();
 
 
+
             overlay.draw = function () {
 
-                // Calculate the current markers
-                var activeMarkers = manager.getMarkerLoD(manager.State);
 
-              
+                // Calculate the Markers to be rendered
+                var renderObjects   = manager.getMarkerLoD(manager.State);
+                var activeMarker    = renderObjects.activeMarker;
+                var selectedMarker  = renderObjects.selectedMarker;
+                var avgMarker       = renderObjects.avgMarker;
 
-                //manager.selectedMarker = activeMarkers.find(m => m.Contains(manager.selectedMarker));
-               
 
-                //var selectedMarker = activeMarkers.find(marker => marker.Id == manager.selectedMarker.Id);
-               
+                drawLineplot(selectedMarker, avgMarker);
+
 
                 var y = d3.select(overlay.getPanes().overlayMouseTarget);
-                
+
                 d3.select(overlay.getPanes().overlayMouseTarget).selectAll("*").remove();
 
                 var layer = d3.select(overlay.getPanes().overlayMouseTarget).append("div")
                     .attr("class", "stations");
 
-                
+
                 var marker = layer.selectAll("svg")
-                    .data(d3.entries(activeMarkers))
+                    .data(d3.entries(activeMarker))
                     .enter()
                     .append("svg:svg")
                     .attr("class", "marker")
@@ -138,7 +141,7 @@
                         var r = d.value.Rotation;
                         var x = coords.x - 20;
                         var y = coords.y - 20;
-                        
+
 
                         return "translate(" + x + " " + y + ") rotate(" + r + " 0 0)";
                     })
@@ -155,7 +158,11 @@
                             .duration(200)
                             .style("opacity", 0);
                     })
-                    .on("click", d => { manager.SelectedMarker = d.value});
+                    .on("click", d =>
+                    {
+                        manager.State = new State(manager.State.year1, manager.State.year2, manager.State.value, manager.State.zoom, d.value.Id);
+                        overlay.draw();
+                    });
 
                 marker.append("svg:path")
                     .attr("d", (m) => (m.value.Slope == null) ? nA : arrow)
@@ -163,7 +170,7 @@
                     .attr("fill", (m) => (m.value.Slope == null) ? "#444444" : "#0D0D0D")
                     .attr("fill-rule", "evenodd")
                     .attr("transform", m => (m.value.Slope == null) ? "translate(5 5) scale(0.1) " : "scale(0.6) translate (-16 -18)")
-                    
+
                 marker.append("svg:path")
                     .attr("d", m => (m.value.Slope == null) ? "" : arrow)
                     .attr("clip-rule", "evenodd")
@@ -171,21 +178,20 @@
                     .attr("fill-rule", "evenodd")
                     .attr("transform", "scale(0.5) translate(-9 -12)");
 
-                // Update Lineplot as well
-                drawLineplot();
             };
 
             // Bind our overlay to the map…
             overlay.setMap(map);
         }
 
-        
+
         function initSelect() {
             $("#selection").on("change", function () {
                 var id = "#description_" + $(this).val();
                 $(id).show().siblings().hide();
-                manager.State = new State(manager.State.year1, manager.State.year2, $(this).val(), manager.State.zoom);
+                manager.State = new State(manager.State.year1, manager.State.year2, $(this).val(), manager.State.zoom, manager.State.selectedMarkerId);
                 overlay.draw();
+
             });
 
             document.getElementById('selection').selectedIndex = 0;
@@ -201,41 +207,88 @@
                 values: [manager.State.year1, manager.State.year2],
                 slide: function (event, ui) {
                     // Update current State
-                    manager.State = new State(parseInt(ui.values[0]), parseInt(ui.values[1]), manager.State.value, manager.State.zoom);
+                    manager.State = new State(parseInt(ui.values[0]), parseInt(ui.values[1]), manager.State.value, manager.State.zoom, manager.State.selectedMarkerId);
 
                     // Update labels
                     $("#year1").val(manager.State.year1);
                     $("#year2").val(manager.State.year2);
 
                     overlay.draw();
+
                 }
             });
 
             // Init labels
             $("#year1").val(manager.State.year1);
             $("#year2").val(manager.State.year2);
-        }  
-
-
-        function drawLineplot() {
-            d3.select("#lineplot").selectAll("*").remove();
-            var rect = d3.select("#lineplot").node().getBoundingClientRect();
-            var width = rect.width;
-            var height = rect.height;
-           
-            var x = manager.LineplotData;
-           
         }
 
+
+
+        function drawLineplot(selectedMarker, avgMarker) {
+
+            
+            var data = (selectedMarker != null) ? selectedMarker.Samples.map(sample => [Date.UTC(sample.year, 0, 0), sample.value]) : [];
+
+
+            Highcharts.chart('lineplot', {
+                chart: {
+                    type: 'spline'
+                },
+                title: {
+                    text: manager.State.value
+                },
+                subtitle: {
+                    text: (selectedMarker != null) ? selectedMarker.Name : ""
+                },
+                xAxis: {
+                    type: 'datetime',
+                    dateTimeLabelFormats: { // don't display the dummy year
+                        month: '%e. %b',
+                        year: '%e'
+                    },
+                    title: {
+                        text: 'Date'
+                    }
+                },
+                yAxis: {
+                    title: {
+                        text: 'Snow depth (m)'
+                    },
+                    min: 0
+                },
+                tooltip: {
+                    headerFormat: '<b>{series.name}</b><br>',
+                    pointFormat: '{point.x:%e. %b}: {point.y:.2f} m'
+                },
+
+                plotOptions: {
+                    spline: {
+                        marker: {
+                            enabled: true
+                        }
+                    }
+                },
+
+                series: [{
+                    name: 'Winter 2012-2013',
+                    // Define the data points. All series have a dummy year
+                    // of 1970/71 in order to be compared on the same x axis. Note
+                    // that in JavaScript, months start at 0 for January, 1 for February etc.
+                    data: data
+                }]
+            });
+        }
 
         $(initMap());
         $(initSlider());
         $(initSelect());
 
-       
-        
+
+
+
     </script>
-    
-   
-</body >
-</html >
+
+
+</body>
+</html>

@@ -4,12 +4,20 @@ document.write('<script type="text/javascript" src="./Functions.js" ></script>')
 document.write('<script src="./Marker.js" charset="utf-8"></script>');
 
 
+function RenderObjects(activeMarker, selectedMarker, avgMarker)
+{
+    this.activeMarker   = activeMarker;
+    this.selectedMarker = selectedMarker;
+    this.avgMarker      = avgMarker;
+}
 
-function State(year1, year2, value, zoom) {
-    this.year1 = year1;
-    this.year2 = year2;
-    this.value = value;
-    this.zoom = zoom;
+
+function State(year1, year2, value, zoom, selectedMarkerId) {
+    this.year1              = year1;
+    this.year2              = year2;
+    this.value              = value;
+    this.zoom               = zoom;
+    this.selectedMarkerId   = selectedMarkerId;
 }
 
 
@@ -19,18 +27,8 @@ class Manager {
     constructor(state, selectedMarker)
     {
         this.state = state;
-        this.selectedMarker = selectedMarker;
     }
 
-    set SelectedMarker(value)
-	{
-        this.selectedMarker = value;
-    }
-
-    get SelectedMarker()
-    {
-        return this.selectedMarker;
-    }
 
     set State(value) 
     {
@@ -68,8 +66,8 @@ class Manager {
     };
 
 
-    getMarker(state) {
-        
+    getMarker(state)
+    {
         var data_clamped = data.filter(v => parseInt(v["year"]) >= state.year1 &&
                                             parseInt(v["year"]) <= state.year2 &&
                                             v[state.value] != null);
@@ -129,33 +127,23 @@ class Manager {
 
         var groupedMarkers = split(markers, groupSize);
 
-        var groupedMarkers2 = groupedMarkers.map(group => Marker.group(group));
-
-        return groupedMarkers2;
-    }
-
-
-    get LineplotData() {
-
-        var values = [];
+        var groupedMarkers = groupedMarkers.map(group => Marker.group(group));
+ 
         
-        //for (var year = parseInt(this.state.year1); year <= parseInt(this.state.year2); year++ )
-        //{
-        //    var state = new State(year.toString(), year.toString(), this.state.value, this.state.zoom);
-        //    var marker = this.getMarkerLoD(state);
 
+        var selectedMarkerId = this.state.selectedMarkerId;
 
-        //    var avgValue = (marker.length > 0) ? avgBy(marker, m => m.value1) : null;
+        var selectedMarker = groupedMarkers.find(m => selectedMarkerId.every(id => m.Id.includes(id)));
 
-        //    var m = marker.find(m => m.getId == this.selectedMarker.getId);
-        //    var value = (m != null) ? m.value1 : null;
-        //    values.push({ year: year.toString(), avg : avgValue, value : value});
-                  
-        //}
+        if (selectedMarker == null) {
+            selectedMarker = groupedMarkers.find(m => m.Id.every(id => selectedMarkerId.includes(id)));
 
+            var selectedMarkerId = (selectedMarker == null) ? [] : selectedMarker.Id;
+            this.state = new State(this.state.year1, this.state.year2, this.state.value, this.state.zoom, selectedMarkerId);
+        }
         
-        return values;
-    }
+
+
+        return new RenderObjects(groupedMarkers, selectedMarker, null);
+    }   
 }
-
-
