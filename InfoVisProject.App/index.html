@@ -20,6 +20,8 @@
     <script src="./data/mapStyles.js" charset="utf-8"></script>
     <script src="./data/stations.js" charset="utf-8"></script>
     <script src="./data/svgPath.js" charset="utf-8"></script>
+    <script src="./data/svgPath.js" charset="utf-8"></script>
+    <script src="./data/texts.js" charset="utf-8"></script>
     <script src="./Manager.js" charset="utf-8"></script>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -233,33 +235,29 @@
 
             Highcharts.chart('lineplot', {
                 chart: {
-                    type: 'spline'
+                    type: 'line'
                 },
                 title: {
-                    text: manager.State.value
+                    text: getLineplotTitle(manager.State.value)
                 },
                 subtitle: {
                     text: (selectedMarker != null) ? selectedMarker.Name : ""
                 },
                 xAxis: {
                     type: 'datetime',
-                    dateTimeLabelFormats: { // don't display the dummy year
-                        month: '%e. %b',
-                        year: '%e'
-                    },
-                    title: {
-                        text: 'Date'
+                    dateTimeLabelFormats: {
+                        year: '%Y'
                     }
                 },
                 yAxis: {
                     title: {
-                        text: 'Snow depth (m)'
+                        text: getLineplotYAxis(manager.State.value)
                     },
                     min: 0
                 },
                 tooltip: {
-                    headerFormat: '<b>{series.name}</b><br>',
-                    pointFormat: '{point.x:%e. %b}: {point.y:.2f} m'
+                    headerFormat: '<b>{point.x:%Y}:</b><br>',
+                    pointFormat: ' {point.y:.2f} '+ getUnit(manager.State.value)
                 },
 
                 plotOptions: {
@@ -271,10 +269,11 @@
                 },
 
                 series: [{
-                    name: 'Winter 2012-2013',
-                    // Define the data points. All series have a dummy year
-                    // of 1970/71 in order to be compared on the same x axis. Note
-                    // that in JavaScript, months start at 0 for January, 1 for February etc.
+                    name: 'Average over Stations: ' + selectedMarker.Name,
+                    data: data
+                },
+                {
+                    name: 'Average over all Stations',
                     data: data
                 }]
             });
