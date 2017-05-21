@@ -129,7 +129,8 @@ class Manager {
 
         var groupedMarkers = groupedMarkers.map(group => Marker.group(group));
  
-        
+
+        var avgMarker = Marker.group(groupedMarkers);
 
         var selectedMarkerId = this.state.selectedMarkerId;
 
@@ -141,9 +142,11 @@ class Manager {
             var selectedMarkerId = (selectedMarker == null) ? [] : selectedMarker.Id;
             this.state = new State(this.state.year1, this.state.year2, this.state.value, this.state.zoom, selectedMarkerId);
         }
+
+
+
         
 
-
-        return new RenderObjects(groupedMarkers, selectedMarker, null);
+        return new RenderObjects(groupedMarkers, selectedMarker, avgMarker);
     }   
 }
