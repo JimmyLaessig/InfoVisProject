@@ -62,13 +62,42 @@ body {
     margin : 10px;
 }
 
+
+
+#radioButtonGroup {
+    width: auto;
+    height: auto;
+    margin: 5px;
+    border-radius: 5px;
+    border: groove;
+    display: flex;
+}
+
+#buttons {
+    width: 30%;
+    float: left;
+    margin: 5px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    padding-left: 0px;
+    padding-right: 0px;
+}
+
+#description2 {
+    width: 70%;
+    margin: 5px;
+    height: auto;
+    float: right;
+}
+
+
 #lineplot {
     width: auto;
     height: 40%;
     margin: 5px;
     border-radius: 5px;
     border: groove;
-    background : red;
+    background: red;
 }
 
 .marker {

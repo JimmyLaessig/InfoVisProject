@@ -28,13 +28,15 @@ function normalize(a)
 
 function maxBy(a, f)
 {
-    return Math.max(...(a.map(f)));
+    var max = Math.max(...(a.map(f)));
+
+    return a.find(a => f(a) == max);
 }
 
 
 function minBy(a, map)
 {
-    return Math.min(...x(a.map(f)));
+    return Math.min(...(a.map(f)));
 }
 
 // Performs Least Squares Estimation

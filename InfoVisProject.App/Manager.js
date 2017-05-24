@@ -12,12 +12,14 @@ function RenderObjects(activeMarker, selectedMarker, avgMarker)
 }
 
 
-function State(year1, year2, value, zoom, selectedMarkerId) {
+function State(year1, year2, value, infoType, zoom, selectedMarkerId) {
     this.year1              = year1;
     this.year2              = year2;
     this.value              = value;
+    this.infoType           = infoType;
     this.zoom               = zoom;
     this.selectedMarkerId   = selectedMarkerId;
+    
 }
 
 
@@ -132,20 +134,15 @@ class Manager {
 
         var avgMarker = Marker.group(groupedMarkers);
 
-        var selectedMarkerId = this.state.selectedMarkerId;
-
-        var selectedMarker = groupedMarkers.find(m => selectedMarkerId.every(id => m.Id.includes(id)));
-
-        if (selectedMarker == null) {
-            selectedMarker = groupedMarkers.find(m => m.Id.every(id => selectedMarkerId.includes(id)));
-
-            var selectedMarkerId = (selectedMarker == null) ? [] : selectedMarker.Id;
-            this.state = new State(this.state.year1, this.state.year2, this.state.value, this.state.zoom, selectedMarkerId);
-        }
 
 
+        var selectedMarker = maxBy(groupedMarkers, m =>
+        {
+            return this.state.selectedMarkerId.filter(id => m.Id.includes(id)).length;
+        });
 
-        
+
+        this.state = new State(this.state.year1, this.state.year2, this.state.value, this.state.infoType, this.state.zoom, selectedMarker.Id);
 
         return new RenderObjects(groupedMarkers, selectedMarker, avgMarker);
     }   

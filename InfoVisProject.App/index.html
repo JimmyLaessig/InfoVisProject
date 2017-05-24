@@ -54,12 +54,27 @@
             </div>
         </div>
 
-
-
+        <div id="radioButtonGroup">
+            <fieldset id="buttons">
+                <input type="radio" id="avg" name="a" value="avg" checked ="true">
+                <label for="avg">Mean per year</label><br>
+                <input type="radio" id="trend" name="a" value="trend">
+                <label for="trend">Trend</label><br>
+            </fieldset>
+            <div id="description2">
+                <div id="description2_avg" >
+                    The difference of the averaged values for start year and end year. An increase is inidcated by the arrow point upwards.
+                </div>
+                <div id="description2_trend" hidden>
+                    The (linear) trend for the selected period of time. Least Squares is performed to obtain a linear regression, whose slope is indicatedby the rotation of the arrows.  
+                </div>
+               
+            </div>
+        </div>
         <p>
-            <label for="year1">Year 1:</label>
+            <label for="year1">From:</label>
             <input type="text" id="year1" readonly style="border:0; color:#f6931f; font-weight:bold;">
-            <label for="year2">Year 2:</label>
+            <label for="year2">To:</label>
             <input type="text" id="year2" readonly style="border:0; color:#f6931f; font-weight:bold;">
         </p>
 
@@ -75,7 +90,7 @@
     <script type="text/javascript">
 
         var overlay = null;
-        var manager = new Manager(new State(1969, 2013, "temperature", 10, ["2"]));
+        var manager = new Manager(new State(1969, 2013, "temperature","avg", 10, ["2"]));
 
 
         function initMap() {
@@ -91,7 +106,7 @@
             });
 
             google.maps.event.addListener(map, 'zoom_changed', function () {
-                manager.State = new State(manager.State.year1, manager.State.year2, manager.State.value, map.getZoom(), manager.State.selectedMarkerId);
+                manager.State = new State(manager.State.year1, manager.State.year2, manager.State.value, manager.state.infoType, map.getZoom(), manager.State.selectedMarkerId);
             });
 
             map.mapTypes.set('custom', new google.maps.StyledMapType(styleGrey));
@@ -162,7 +177,7 @@
                     })
                     .on("click", d =>
                     {
-                        manager.State = new State(manager.State.year1, manager.State.year2, manager.State.value, manager.State.zoom, d.value.Id);
+                        manager.State = new State(manager.State.year1, manager.State.year2, manager.State.value, manager.state.infoType, manager.State.zoom, d.value.Id);
                         overlay.draw();
                     });
 
@@ -191,7 +206,7 @@
             $("#selection").on("change", function () {
                 var id = "#description_" + $(this).val();
                 $(id).show().siblings().hide();
-                manager.State = new State(manager.State.year1, manager.State.year2, $(this).val(), manager.State.zoom, manager.State.selectedMarkerId);
+                manager.State = new State(manager.State.year1, manager.State.year2, $(this).val(), manager.state.infoType, manager.State.zoom, manager.State.selectedMarkerId);
                 overlay.draw();
 
             });
@@ -209,7 +224,7 @@
                 values: [manager.State.year1, manager.State.year2],
                 slide: function (event, ui) {
                     // Update current State
-                    manager.State = new State(parseInt(ui.values[0]), parseInt(ui.values[1]), manager.State.value, manager.State.zoom, manager.State.selectedMarkerId);
+                    manager.State = new State(parseInt(ui.values[0]), parseInt(ui.values[1]), manager.State.value, manager.state.infoType, manager.State.zoom, manager.State.selectedMarkerId);
 
                     // Update labels
                     $("#year1").val(manager.State.year1);
@@ -226,6 +241,21 @@
         }
 
 
+        function initRadioGroup() 
+        {
+            $("#buttons input").change( function () {
+
+                var infoType = $(this).val();
+                var id = "#description2_" + infoType;
+                $(id).show().siblings().hide();
+
+                manager.State = new State(manager.State.year1, manager.State.year2, manager.State.value, infoType,  manager.State.zoom, manager.State.selectedMarkerId);
+                overlay.draw();
+
+            });
+
+           
+        }
 
         function drawLineplot(selectedMarker, avgMarker) {
 
@@ -282,6 +312,7 @@
         $(initMap());
         $(initSlider());
         $(initSelect());
+        $(initRadioGroup());
 
 
 
