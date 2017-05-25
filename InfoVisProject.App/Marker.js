@@ -6,80 +6,132 @@ function Tuple(year, value) {
 }
 
 
-class Marker
-{
+function Marker(id, name, lat, long, from, to, slope, samples) {
+    this.Id         = id;
+    this.Name       = name;
+    this.Latitude   = lat;
+    this.Longitude  = long;
+    this.From       = from;
+    this.To         = to;
+    this.Slope      = slope;
+    this.Samples    = samples;
 
-	constructor(id, name, lat, long, from, to, slope, samples)
-    {
-        this.id     = id;
-        this.name   = name;
-        this.lat    = lat;
-        this.long   = long;
-        this.from   = from;
-        this.to     = to;
-        this.slope	= slope;
-		this.samples = samples;
-    }
+    this.ToolTip = toolTip;
+    this.Rotation = rotation;
+    this.Color = color;
 
+    this.Contains = contains;
+    this.Equals = equals;
 
-    get Id()        {return this.id; }
-    get Name()      {return this.name;}
-    get Latitude()  {return this.lat; }
-    get Longitude() {return this.long; }
-    get From()      {return this.from;}
-    get To()        {return this.to;}
-    get Slope()     {return this.slope;}
-	get Samples() { return this.samples; }
+    this.ContainsNull = containsNull;
+}
 
-    get ToolTip()
-    {
-        //let value1Text = (this.value1 == null) ? "n.A." : this.value1 + "";
-        //let value2Text = (this.value2 == null) ? "n.A." : this.value2 + "";
+    function containsNull(infoType)
+    {      
+        if (infoType == "trend") {
+            return this.Slope == null;
+        }
+        else if (infoType == "avg") {
+            
+            return this.Samples.length < 2
+        }
+        return true;
+};
+    
+    function contains(ids) {
+        return ids.every(id => id in this.Id);
+    };
 
-        let html =
-            '<p>' + this.name + '</p>';
-            //'<ul style="list-style-type:none"> '+
-            //'<li>' + this.year1 + ": " + value1Text+'</li>'+
-            //'<li>' + this.year2 + ": " + value2Text+'</li>'+            
-            //'</ul>';
-        return html;
-    }
+    function toolTip(infoType) {
 
-
-
-    get Rotation()
-    {
-        if (this.slope == null )
+        
+        if (infoType == "trend")
         {
-            return 0.0;
+            let html =
+                '<p>' + this.Name + '</p>' + 'Slope: ' + this.Slope;
+            return html;
         }
         
-        //var diff = this.value2 - this.value1;        
-        //var rotation    = -diff * 100.0;    
-        return this.slope;
-        //return Math.min(90.0, Math.max(-90.0, rotation));      
+        else if (infoType == "avg")
+        {
+            let sample1 = this.Samples[0]
+            let sample2 = this.Samples[this.Samples.length - 1]
+
+            if (this.ContainsNull(infoType)) {
+                let html =
+                    '<p>' + this.Name + '</p>' +
+                    '<ul style="list-style-type:none"> ' +
+                    '<li>' + this.From + ':  n.A. </li>' +
+                    '<li>' + this.To + ': n.A. </li>' +
+                    '</ul>';
+                return html;
+            }
+            else {
+                let html =
+                    '<p>' + this.Name + '</p>' +
+                    '<ul style="list-style-type:none"> ' +
+                    '<li>' + sample1.year + ": " + sample1.value + '</li>' +
+                    '<li>' + sample2.year + ": " + sample2.value + '</li>' +
+                    '</ul>';
+                return html;
+            }
+        }
+        return "";
+        
+        
+        
     }
 
-   
 
-    get Color() {
-        var rotation = this.Rotation;
+
+    function rotation(infoType) {
+        if (infoType == "trend") {
+            if (this.slope == null) {
+                return 0;
+            }
+
+            
+            
+            return this.slope * 100;
+        }
+        else if (infoType == "avg") {
+            if (this.ContainsNull(infoType))
+            {
+                return 0.0;
+            }
+            else {
+                var diff = this.Samples[this.Samples.length - 1].value - this.Samples[0].value;
+                var rotation = -diff * 100.0;
+                return Math.min(90.0, Math.max(-90.0, rotation));
+            }
+        }
+        return 0.0;
+          
+    }
+
+
+
+    function color(infoType) {
+        var rotation = this.Rotation(infoType);
         if (rotation < 0) {
-           
+
             var i = (-rotation / 90.0);
             var interpolate = d3.interpolateRgb("yellow", "red");
             return interpolate(i);
         }
         else {
             var i = Math.abs(rotation / 90.0);
-           
+
             var interpolate = d3.interpolateRgb("yellow", "green");
             return interpolate(i);
         }
-	}
+    }
 
 
-    static group(marker) {
+    function equals(other) {   
+        return this.Id.every(id => other.Id.includes(id)) && other.Id.every(id => this.Id.includes(id));
+    }
+    var groupMarker = function(marker) {
 		
 		var count = marker.length;
 
@@ -115,9 +167,7 @@ class Marker
 		
 		return new Marker(id, name, lat, long, year1, year2, slope, samples);
     }   
-}
 
 
-Marker.prototype.Contains = function (ids) {
-    return ids.every(id => id in this.Id);
-};
+
+

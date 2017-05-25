@@ -129,12 +129,12 @@ class Manager {
 
         var groupedMarkers = split(markers, groupSize);
 
-        var groupedMarkers = groupedMarkers.map(group => Marker.group(group));
+        var groupedMarkers = groupedMarkers.map(group => groupMarker(group));
  
 
-        var avgMarker = Marker.group(groupedMarkers);
+        var avgMarker = groupMarker(groupedMarkers);
 
-
+        
 
         var selectedMarker = maxBy(groupedMarkers, m =>
         {
