@@ -107,20 +107,8 @@ let main argv =
     //    printfn "%s: stations: %i" year (numStations |> Array.length)
     
 
-    let maxTemp = samplesAveraged |> Array.choose (fun sample -> sample.temperature) |> Array.max
-    let minTemp = samplesAveraged |> Array.choose (fun sample -> sample.temperature) |> Array.min
+    
 
-    let maxSalinity = samplesAveraged |> Array.choose (fun sample -> sample.salinity) |> Array.max
-    let minSalinity = samplesAveraged |> Array.choose (fun sample -> sample.salinity) |> Array.min
-
-    let maxChlorophyll = samplesAveraged |> Array.choose (fun sample -> sample.discreteChlorophyll) |> Array.max
-    let minChlorophyll = samplesAveraged |> Array.choose (fun sample -> sample.discreteChlorophyll) |> Array.min
-
-   
-    printfn"Temperature: min %f, max %f" minTemp maxTemp
-    printfn"Salinity: min %f, max %f" minSalinity maxSalinity
-    printfn"Discrete Chlorophyll: min %f, max %f" minChlorophyll maxChlorophyll
-  
     //let maxSalinity = samplesAveraged |> Array.maxBy(fun sample -> sample.salinity)
 
     //let tempDiff = abs(maxTemp.temperature - minTemp.temperature)

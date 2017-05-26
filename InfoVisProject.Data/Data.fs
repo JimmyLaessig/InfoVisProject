@@ -35,7 +35,38 @@ module Data
         let serializer = new System.Web.Script.Serialization.JavaScriptSerializer()
         
         let json = "var data = " + serializer.Serialize(samples) + ";"
+       
+        
+
+        let maxTemp = samples |> Array.choose (fun sample -> sample.temperature) |> Array.max
+        let minTemp = samples |> Array.choose (fun sample -> sample.temperature) |> Array.min
+
+        let maxSalinity = samples |> Array.choose (fun sample -> sample.salinity) |> Array.max
+        let minSalinity = samples |> Array.choose (fun sample -> sample.salinity) |> Array.min
+
+        let maxChlorophyll = samples |> Array.choose (fun sample -> sample.discreteChlorophyll) |> Array.max
+        let minChlorophyll = samples |> Array.choose (fun sample -> sample.discreteChlorophyll) |> Array.min
+
+        let maxChlorophyll2= samples |> Array.maxBy(fun sample -> sample.discreteChlorophyll)
+
+        let values = 
+            [|
+            "\n";
+            sprintf "var minTemperature = %f;"minTemp;
+            sprintf "var maxTemperature = %f;"maxTemp;
+            sprintf "var minSalinity = %f;"minSalinity
+            sprintf "var maxSalinity = %f;"maxSalinity
+            sprintf "var minDiscreteChlorophyll = %f;"minChlorophyll
+            sprintf "var maxDiscreteChlorohpyll = %f;"maxChlorophyll
+            |]
+        
         System.IO.File.WriteAllLines(path, [|json|])
+        System.IO.File.AppendAllLines(path, values)
+
+
+
+
+
        // printfn "%s" json
 
     let WriteToFile path (header : string[])( samples : Sample[]) = 

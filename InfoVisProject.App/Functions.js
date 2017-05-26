@@ -1,5 +1,7 @@
 ﻿
 
+
+
 function groupBy(a, keyFunction) {
     var groups = {};
     a.forEach(function (el) {
@@ -41,11 +43,12 @@ function minBy(a, map)
     return Math.min(...(a.map(f)));
 }
 
+
 // Performs Least Squares Estimation
 // http://www.stat.ufl.edu/~winner/qmb3250/notespart2.pdf
 // Returns the coefficients b0 b1 for the line equation y = b0 + b1 * x
 function calcLeastSquares(x, y) {
-
+   
     var n = x.length;
 
     var xy = x.map( (value, index) => value + y[index]);

@@ -93,16 +93,14 @@ class Manager {
             var xn = normalize(values);
             var yn = normalize(years);
 
+            // Calculate linear regression using least squares estimation
+            var line = calcLeastSquares(xn, yn);
 
-            var value1 = calcLeastSquares(values, yn);
-            var value2 = calcLeastSquares(xn, yn);
-
-            var angle1 = Math.atan(value1.b1) * Math.PI / 180;
-            var angle2 = Math.atan(value2.b1) * Math.PI / 180;
-
+            var angle = Math.atan(line.b1) * Math.PI / 180;
+            
 			var samples = values.map((val, i) => new Tuple(years[i], val));
 			
-			return new Marker([station.Id], [station.Name], lat, long, state.year1, state.year2, angle2, samples );
+            return new Marker([station.Id], [station.Name], lat, long, state.year1, state.year2, angle, samples );
 
         });
 

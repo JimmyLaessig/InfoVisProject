@@ -84,11 +84,12 @@ function Marker(id, name, lat, long, from, to, slope, samples) {
 
 
     function rotation(infoType, domain) {
+
         if (infoType == "trend") {
             if (this.slope == null) {
                 return 0;
             }
-            return this.slope * 100;
+            return  - this.slope * 100;
         }
         else if (infoType == "avg") {
             if (this.ContainsNull(infoType))
@@ -100,18 +101,18 @@ function Marker(id, name, lat, long, from, to, slope, samples) {
                 var max = 0.0;
                 if (domain == "temperature")
                 {
-                    max = 21.48;
-                    min = 9.8;
+                    max = maxTemperature;
+                    min = minTemperature;
                 }
                 else if (domain == "salinity")
                 {
-                    max = 32.50444;
-                    min = 0.0;
+                    max = maxSalinity;
+                    min = minSalinity;
                 }
                 else if (domain == "discreteChlorophyll")
                 {
-                    max = 0.45;
-                    min = 58.4;
+                    max = maxDiscreteChlorohpyll;
+                    min = minDiscreteChlorophyll;
                 }
   
                 var value1_normalized = (this.Samples[0].value - min) / (max - min);
