@@ -12,10 +12,10 @@ function RenderObjects(activeMarker, selectedMarker, avgMarker)
 }
 
 
-function State(year1, year2, value, infoType, zoom, selectedMarkerId) {
+function State(year1, year2, domain, infoType, zoom, selectedMarkerId) {
     this.year1              = year1;
     this.year2              = year2;
-    this.value              = value;
+    this.domain             = domain;
     this.infoType           = infoType;
     this.zoom               = zoom;
     this.selectedMarkerId   = selectedMarkerId;
@@ -72,7 +72,7 @@ class Manager {
     {
         var data_clamped = data.filter(v => parseInt(v["year"]) >= state.year1 &&
                                             parseInt(v["year"]) <= state.year2 &&
-                                            v[state.value] != null);
+                                            v[state.domain] != null);
 
 
         var marker = stations.map(station => {
@@ -82,10 +82,10 @@ class Manager {
 
 
 			// Get samples for this station
-			var samples = data_clamped.filter((v) => v["station"] == station.Id && v[state.value] != null);
+			var samples = data_clamped.filter((v) => v["station"] == station.Id && v[state.domain] != null);
 
 			
-			var values	= samples.map(sample => sample[state.value].Value);
+			var values	= samples.map(sample => sample[state.domain].Value);
 			var years	= samples.map(sample => parseInt(sample["year"]));
   
 
@@ -142,7 +142,7 @@ class Manager {
         });
 
 
-        this.state = new State(this.state.year1, this.state.year2, this.state.value, this.state.infoType, this.state.zoom, selectedMarker.Id);
+        this.state = new State(this.state.year1, this.state.year2, this.state.domain, this.state.infoType, this.state.zoom, selectedMarker.Id);
 
         return new RenderObjects(groupedMarkers, selectedMarker, avgMarker);
     }   

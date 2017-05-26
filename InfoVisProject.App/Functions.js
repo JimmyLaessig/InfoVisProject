@@ -17,6 +17,7 @@ function groupBy(a, keyFunction) {
     });
 };
 
+
 // Normalizes the values in a such that the smallest is mapped to 0 and the largest to 1
 function normalize(a)
 {
@@ -25,6 +26,7 @@ function normalize(a)
 
     return a.map(v => (v - min) / (max - min));
 }
+
 
 function maxBy(a, f)
 {
@@ -42,7 +44,6 @@ function minBy(a, map)
 // Performs Least Squares Estimation
 // http://www.stat.ufl.edu/~winner/qmb3250/notespart2.pdf
 // Returns the coefficients b0 b1 for the line equation y = b0 + b1 * x
-
 function calcLeastSquares(x, y) {
 
     var n = x.length;
@@ -88,6 +89,7 @@ function center(a)
 	return (min + max) / 2;
 }
 
+
 function sum(a) {
     return a.reduce((acc, val) => acc + val, 0.0);
 }
@@ -116,6 +118,7 @@ function split (arr, chunkSize) {
     return groups;
 }
 
+
 function distinctBy(a, key) {
     var seen = {};
     return a.filter(function (item) {
@@ -123,6 +126,7 @@ function distinctBy(a, key) {
         return seen.hasOwnProperty(k) ? false : (seen[k] = true);
     })
 }
+
 
 function choose(a, condidtion, map) {
     return a.reduce(function (res, val) {

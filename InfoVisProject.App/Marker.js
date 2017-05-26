@@ -76,22 +76,18 @@ function Marker(id, name, lat, long, from, to, slope, samples) {
                 return html;
             }
         }
-        return "";
-        
+        return "";   
         
         
     }
 
 
 
-    function rotation(infoType) {
+    function rotation(infoType, domain) {
         if (infoType == "trend") {
             if (this.slope == null) {
                 return 0;
             }
-
-            
-            
             return this.slope * 100;
         }
         else if (infoType == "avg") {
@@ -100,9 +96,30 @@ function Marker(id, name, lat, long, from, to, slope, samples) {
                 return 0.0;
             }
             else {
-                var diff = this.Samples[this.Samples.length - 1].value - this.Samples[0].value;
-                var rotation = -diff * 100.0;
-                return Math.min(90.0, Math.max(-90.0, rotation));
+                var min = 0.0;
+                var max = 0.0;
+                if (domain == "temperature")
+                {
+                    max = 21.48;
+                    min = 9.8;
+                }
+                else if (domain == "salinity")
+                {
+                    max = 32.50444;
+                    min = 0.0;
+                }
+                else if (domain == "discreteChlorophyll")
+                {
+                    max = 0.45;
+                    min = 58.4;
+                }
+  
+                var value1_normalized = (this.Samples[0].value - min) / (max - min);
+                var value2_normalized = (this.Samples[this.Samples.length - 1].value - min) / (max - min);
+
+                var diff = value2_normalized - value1_normalized;
+
+                return -90 * diff;
             }
         }
         return 0.0;
@@ -111,8 +128,8 @@ function Marker(id, name, lat, long, from, to, slope, samples) {
 
 
 
-    function color(infoType) {
-        var rotation = this.Rotation(infoType);
+    function color(infoType, domain) {
+        var rotation = this.Rotation(infoType, domain);
         if (rotation < 0) {
 
             var i = (-rotation / 90.0);

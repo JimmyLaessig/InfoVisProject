@@ -6,7 +6,6 @@ open Data
 [<EntryPoint>]
 let main argv = 
     let path        = "SFBay.csv"
-    let path_out    = "SFBay_averaged.csv"
     let path_json   = "InfoVisProject.App/data/data.js"
     let lines       = File.ReadAllLines(path)|> Array.map (fun line -> line.Split(';') )
                                         
@@ -17,10 +16,11 @@ let main argv =
 
     let timeStamp           = data |> Array.map(fun line -> line.[0].Substring(0, 4))
     let stationNumber       = data |> Array.map(fun line -> line.[1])
-    let discreteChlorophyll = data |> Array.map(fun line -> line.[4])  (* |> Array.map (fun sample -> sample.Replace('.',','))*)
-    let salinity            = data |> Array.map(fun line -> line.[17]) (* |> Array.map (fun sample -> sample.Replace('.',','))*)
-    let temperature         = data |> Array.map(fun line -> line.[18]) (* |> Array.map (fun sample -> sample.Replace('.',','))*)
+    let discreteChlorophyll = data |> Array.map(fun line -> line.[4])   |> Array.map (fun sample -> sample.Replace('.',','))
+    let salinity            = data |> Array.map(fun line -> line.[17])  |> Array.map (fun sample -> sample.Replace('.',','))
+    let temperature         = data |> Array.map(fun line -> line.[18])  |> Array.map (fun sample -> sample.Replace('.',','))
     
+
     // Reduced Dimensions
     let data =  timeStamp |> Array.mapi (fun i t -> [|t ; stationNumber.[i];discreteChlorophyll.[i];salinity.[i];temperature.[i]|])
 
@@ -31,7 +31,7 @@ let main argv =
     let nonStandardStations = [|"662";"659";"655";"654";"653";"652";"651";"650";"411";"407";"405";"12.5";"19";"28.5"; "5"; "6"; "7"|]
 
 
-    //System.Double.Parse(
+    
     
     
     let samples = data |> Array.map (fun sample -> 
@@ -92,26 +92,40 @@ let main argv =
                                                 )
                                                     
     
-    let minYear = ((samplesAveraged |> Array.sortBy(fun sample -> sample.year + sample.station)).[0]            ).year
-    let maxYear = ((samplesAveraged |> Array.sortBy(fun sample -> sample.year + sample.station)) |> Array.last  ).year
+    //let minYear = ((samplesAveraged |> Array.sortBy(fun sample -> sample.year + sample.station)).[0]            ).year
+    //let maxYear = ((samplesAveraged |> Array.sortBy(fun sample -> sample.year + sample.station)) |> Array.last  ).year
     
-    let minYear = System.Int32.Parse(minYear)
-    let maxYear = System.Int32.Parse(maxYear)
+    //let minYear = System.Int32.Parse(minYear)
+    //let maxYear = System.Int32.Parse(maxYear) 
+    
 
-    let x = samples |> Array.filter(fun sample -> sample.station = "12" && sample.year = "1988")
-    let y = samplesAveraged |> Array.filter(fun sample -> sample.station = "12" && sample.year = "1988")
-    let maxTemp = samplesAveraged |> Array.maxBy (fun sample -> sample.temperature)
-
-    for year in minYear..maxYear do
-        let year = sprintf "%i" year
+    //for year in minYear..maxYear do
+    //    let year = sprintf "%i" year
        
-        let numStations = samplesAveraged |> Array.filter (fun sample -> sample.year = year)
-                                          |> Array.map (fun sample -> sample.year)
-        printfn "%s: stations: %i" year (numStations |> Array.length)
+    //    let numStations = samplesAveraged |> Array.filter (fun sample -> sample.year = year)
+    //                                      |> Array.map (fun sample -> sample.year)
+    //    printfn "%s: stations: %i" year (numStations |> Array.length)
     
-    
+
+    let maxTemp = samplesAveraged |> Array.choose (fun sample -> sample.temperature) |> Array.max
+    let minTemp = samplesAveraged |> Array.choose (fun sample -> sample.temperature) |> Array.min
+
+    let maxSalinity = samplesAveraged |> Array.choose (fun sample -> sample.salinity) |> Array.max
+    let minSalinity = samplesAveraged |> Array.choose (fun sample -> sample.salinity) |> Array.min
+
+    let maxChlorophyll = samplesAveraged |> Array.choose (fun sample -> sample.discreteChlorophyll) |> Array.max
+    let minChlorophyll = samplesAveraged |> Array.choose (fun sample -> sample.discreteChlorophyll) |> Array.min
+
+   
+    printfn"Temperature: min %f, max %f" minTemp maxTemp
+    printfn"Salinity: min %f, max %f" minSalinity maxSalinity
+    printfn"Discrete Chlorophyll: min %f, max %f" minChlorophyll maxChlorophyll
+  
+    //let maxSalinity = samplesAveraged |> Array.maxBy(fun sample -> sample.salinity)
+
+    //let tempDiff = abs(maxTemp.temperature - minTemp.temperature)
+
     // Build averaged samples
-    Data.WriteToFile path_out header samplesAveraged  
     Data.WriteToJson path_json samplesAveraged
     printfn "Press any key to close..."
     Console.ReadKey() |> ignore

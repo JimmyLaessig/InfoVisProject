@@ -36,7 +36,7 @@ module Data
         
         let json = "var data = " + serializer.Serialize(samples) + ";"
         System.IO.File.WriteAllLines(path, [|json|])
-        printfn "%s" json
+       // printfn "%s" json
 
     let WriteToFile path (header : string[])( samples : Sample[]) = 
         let header  = header |> String.concat ";"

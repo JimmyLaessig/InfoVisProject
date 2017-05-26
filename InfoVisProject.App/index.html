@@ -106,7 +106,7 @@
             });
 
             google.maps.event.addListener(map, 'zoom_changed', function () {
-                manager.State = new State(manager.State.year1, manager.State.year2, manager.State.value, manager.state.infoType, map.getZoom(), manager.State.selectedMarkerId);
+                manager.State = new State(manager.State.year1, manager.State.year2, manager.State.domain, manager.state.infoType, map.getZoom(), manager.State.selectedMarkerId);
             });
 
             map.mapTypes.set('custom', new google.maps.StyledMapType(styleGrey));
@@ -156,7 +156,7 @@
                         var coords = new google.maps.LatLng(d.value.Latitude, d.value.Longitude);
                         coords = overlay.getProjection().fromLatLngToDivPixel(coords);
 
-                        var r = d.value.Rotation(manager.state.infoType);
+                        var r = d.value.Rotation(manager.state.infoType, manager.state.domain);
                         var x = coords.x - 20;
                         var y = coords.y - 20;
 
@@ -178,7 +178,7 @@
                     })
                     .on("click", d =>
                     {
-                        manager.State = new State(manager.State.year1, manager.State.year2, manager.State.value, manager.state.infoType, manager.State.zoom, d.value.Id);
+                        manager.State = new State(manager.State.year1, manager.State.year2, manager.State.domain, manager.state.infoType, manager.State.zoom, d.value.Id);
                         overlay.draw();
                     });
 
@@ -200,12 +200,9 @@
                 marker.append("svg:path")
                     .attr("d", m => (m.value.ContainsNull(manager.State.infoType)) ? "" : arrow)
                     .attr("clip-rule", "evenodd")
-                    .attr("fill", (d) => d.value.Color(manager.State.infoType))
+                    .attr("fill", (d) => d.value.Color(manager.State.infoType, manager.State.domain))
                     .attr("fill-rule", "evenodd")
                     .attr("transform", "scale(0.5) translate(-9 -12)");
-
-                
-
             };
 
             // Bind our overlay to the map…
@@ -235,7 +232,7 @@
                 values: [manager.State.year1, manager.State.year2],
                 slide: function (event, ui) {
                     // Update current State
-                    manager.State = new State(parseInt(ui.values[0]), parseInt(ui.values[1]), manager.State.value, manager.state.infoType, manager.State.zoom, manager.State.selectedMarkerId);
+                    manager.State = new State(parseInt(ui.values[0]), parseInt(ui.values[1]), manager.State.domain, manager.state.infoType, manager.State.zoom, manager.State.selectedMarkerId);
 
                     // Update labels
                     $("#year1").val(manager.State.year1);
@@ -260,7 +257,7 @@
                 var id = "#description2_" + infoType;
                 $(id).show().siblings().hide();
 
-                manager.State = new State(manager.State.year1, manager.State.year2, manager.State.value, infoType,  manager.State.zoom, manager.State.selectedMarkerId);
+                manager.State = new State(manager.State.year1, manager.State.year2, manager.State.domain, infoType,  manager.State.zoom, manager.State.selectedMarkerId);
                 overlay.draw();
 
             });
@@ -280,7 +277,7 @@
                     type: 'line'
                 },
                 title: {
-                    text: getLineplotTitle(manager.State.value)
+                    text: getLineplotTitle(manager.State.domain)
                 },
                 subtitle: {
                     text: (selectedMarker != null) ? selectedMarker.Name : ""
@@ -293,13 +290,13 @@
                 },
                 yAxis: {
                     title: {
-                        text: getLineplotYAxis(manager.State.value)
+                        text: getLineplotYAxis(manager.State.domain)
                     },
                     min: 0
                 },
                 tooltip: {
                     headerFormat: '<b>{point.x:%Y}:</b><br>',
-                    pointFormat: ' {point.y:.2f} '+ getUnit(manager.State.value)
+                    pointFormat: ' {point.y:.2f} '+ getUnit(manager.State.domain)
                 },
 
                 plotOptions: {
