@@ -13,7 +13,8 @@ However, I've included a data-cleaning program that beforehand reduces the datas
 
 Google Maps API 3.27  
 D3 3.3.3              
-JQuery 1.12.1 
+JQuery 1.12.1
+
 Highcharts 5.0.12 
 
 # Development Environment
