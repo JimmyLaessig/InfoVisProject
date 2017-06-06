@@ -1,7 +1,7 @@
 ## Visualization of Water Quality of San Francisco Bay
-06.06.2017
-Author: Bernhard Rainer
-Email: bernhard.rainer@tuwien.ac.at
+06.06.2017  
+Author: Bernhard Rainer  
+Email: bernhard.rainer@tuwien.ac.at  
 
 
 This visualization displays the water quality measurements of the San Francisco Bay from 1969 to 2014. 
