@@ -139,7 +139,7 @@ class Manager {
             return this.state.selectedMarkerId.filter(id => m.Id.includes(id)).length;
         });
 
-
+        console.log(selectedMarker);
         this.state = new State(this.state.year1, this.state.year2, this.state.domain, this.state.infoType, this.state.zoom, selectedMarker.Id);
 
         return new RenderObjects(groupedMarkers, selectedMarker, avgMarker);

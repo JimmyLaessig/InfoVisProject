@@ -269,8 +269,8 @@
         function drawLineplot(selectedMarker, avgMarker) {
 
             
-            var data =  (selectedMarker != null) ? selectedMarker.Samples.map(sample => [Date.UTC(sample.year, 0, 0), sample.value]) : [];
-            var data2 = (avgMarker != null) ? avgMarker.Samples.map(sample => [Date.UTC(sample.year, 0, 0), sample.value]) : [];
+            var data =  (selectedMarker != null) ? selectedMarker.Samples.map(sample => [Date.UTC(sample.year + 1, 0, 0), sample.value]) : [];
+            var data2 = (avgMarker != null) ? avgMarker.Samples.map(sample => [Date.UTC(sample.year + 1, 0, 0), sample.value]) : [];
 
             Highcharts.chart('lineplot', {
                 chart: {
