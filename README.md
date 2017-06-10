@@ -5,7 +5,7 @@ Email: bernhard.rainer@tuwien.ac.at
 
 
 This visualization displays the water quality measurements of the San Francisco Bay from 1969 to 2014. 
-The application is developed as a standalone javascript web-aplication, meaning that no build has to be executed. 
+The application is developed as a standalone javascript web-aplication, meaning that no build has to be executed and no webserver is needed.
 
 However, I've included a data-cleaning program that beforehand reduces the dataset to averages-per-year and reduces the dimensionality. The output is directly copied to the 'InfoVisProject.App/data/data.js' file in order to be available for to the web application. This does not need to be executed, since this file is shipped already with the program. 
 
