@@ -42,13 +42,14 @@ function Marker(id, name, lat, long, from, to, slope, samples) {
         return ids.every(id => id in this.Id);
     };
 
-    function toolTip(infoType) {
+    function toolTip(infoType, domain) {
 
         
         if (infoType == "trend")
         {
             let html =
-                '<p>' + this.Name + '</p>' + 'Slope: ' + this.Slope;
+                '<p>' + this.Name + '</p>' +
+                '<b>Slope</b>: ' + this.Slope.toFixed(4);
             return html;
         }
         
@@ -68,10 +69,10 @@ function Marker(id, name, lat, long, from, to, slope, samples) {
             }
             else {
                 let html =
-                    '<p>' + this.Name + '</p>' +
+                    '<p><b>' + this.Name + '</b></p>' +
                     '<ul style="list-style-type:none"> ' +
-                    '<li>' + sample1.year + ": " + sample1.value + '</li>' +
-                    '<li>' + sample2.year + ": " + sample2.value + '</li>' +
+                    '<li><b>' + sample1.year + "</b>: " + sample1.value.toFixed(3) + " " + getUnit(domain) + '</li>' +
+                    '<li><b>' + sample2.year + "</b>: " + sample2.value.toFixed(3) + " " + getUnit(domain) + '</li>' +
                     '</ul>';
                 return html;
             }
